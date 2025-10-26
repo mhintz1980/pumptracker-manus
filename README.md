@@ -1,4 +1,4 @@
-# PumpTracker Lite
+# PumpTracker Lite  with more tests
 
 A modern, responsive production management system for tracking pump manufacturing orders through their complete lifecycle. Built with React, TypeScript, Tailwind CSS, and Recharts for data visualization.
 
