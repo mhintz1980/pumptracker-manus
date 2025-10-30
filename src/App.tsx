@@ -10,12 +10,13 @@ import { BuildTimeTrend } from "./components/dashboard/BuildTimeTrend";
 import { ValueBreakdown } from "./components/dashboard/ValueBreakdown";
 import { OrderTable } from "./components/dashboard/OrderTable";
 import { KanbanBoard } from "./components/kanban/KanbanBoard";
+import { SchedulingView } from "./components/scheduling/SchedulingView";
 import { Toaster } from "sonner";
 import { Pump } from "./types";
-import { Package, BarChart3, Layout } from "lucide-react";
+import { Package, BarChart3, Layout, Calendar } from "lucide-react";
 import { Button } from "./components/ui/Button";
 
-type View = "dashboard" | "kanban";
+type View = "dashboard" | "kanban" | "scheduling";
 
 function App() {
   const { load, filtered } = useApp();
@@ -61,6 +62,14 @@ function App() {
                 <Layout className="h-4 w-4 mr-1" />
                 Kanban
               </Button>
+              <Button
+                variant={currentView === "scheduling" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setCurrentView("scheduling")}
+              >
+                <Calendar className="h-4 w-4 mr-1" />
+                Scheduling
+              </Button>
               <AddPoButton onClick={() => setIsAddPoModalOpen(true)} />
             </div>
           </div>
@@ -80,8 +89,10 @@ function App() {
             <ValueBreakdown pumps={filteredPumps} />
             <OrderTable pumps={filteredPumps} onRowClick={setSelectedPump} />
           </>
-        ) : (
+        ) : currentView === "kanban" ? (
           <KanbanBoard pumps={filteredPumps} onCardClick={setSelectedPump} />
+        ) : (
+          <SchedulingView />
         )}
       </main>
 
