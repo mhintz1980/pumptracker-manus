@@ -21,14 +21,30 @@ const toIso = (v?: string | number): string | undefined => {
     if (!isNaN(date.getTime())) {
       return date.toISOString();
     }
-  } catch (e) {
-    console.error("Date parsing error:", e);
+  } catch (error) {
+    console.error("Date parsing error:", error);
   }
   return undefined;
 };
 
+interface RawPumpRow {
+  id?: string;
+  serial?: number;
+  po?: string;
+  customer?: string;
+  model?: string;
+  stage?: string;
+  priority?: string;
+  powder_color?: string;
+  color?: string;
+  last_update?: string | number;
+  value?: number;
+  scheduledEnd?: string | number;
+  scheduled_end?: string | number;
+}
+
 // Helper to validate and normalize a single row into a Pump object
-function normalizeRow(r: any): Pump | null {
+function normalizeRow(r: RawPumpRow): Pump | null {
   // Required fields check
   if (!r.id && !r.serial) return null;
   if (!r.po || !r.customer || !r.model || !r.stage) return null;
@@ -59,7 +75,7 @@ function normalizeRow(r: any): Pump | null {
 }
 
 // Main function to parse CSV/JSON file
-export function parseFile(file: File): Promise<{ pumps: Pump[], invalidRows: any[] }> {
+export function parseFile(file: File): Promise<{ pumps: Pump[], invalidRows: RawPumpRow[] }> {
   return new Promise((resolve, reject) => {
     const isJson = file.name.toLowerCase().endsWith('.json');
 
@@ -77,9 +93,9 @@ export function parseFile(file: File): Promise<{ pumps: Pump[], invalidRows: any
               acc.invalidRows.push(r);
             }
             return acc;
-          }, { pumps: [] as Pump[], invalidRows: [] as any[] });
+          }, { pumps: [] as Pump[], invalidRows: [] as RawPumpRow[] });
           resolve({ pumps, invalidRows });
-        } catch (e) {
+        } catch (error) {
           reject(new Error("Failed to parse JSON file."));
         }
       };
@@ -91,9 +107,8 @@ export function parseFile(file: File): Promise<{ pumps: Pump[], invalidRows: any
         header: true,
         skipEmptyLines: true,
         dynamicTyping: true,
-        complete: ({ data }: any) => {
-          
-          const { pumps, invalidRows } = (data as any[]).reduce((acc, r) => {
+        complete: ({ data }: { data: RawPumpRow[] }) => {
+          const { pumps, invalidRows } = (data as RawPumpRow[]).reduce((acc, r) => {
             const pump = normalizeRow(r);
             if (pump) {
               acc.pumps.push(pump);
@@ -101,7 +116,7 @@ export function parseFile(file: File): Promise<{ pumps: Pump[], invalidRows: any
               acc.invalidRows.push(r);
             }
             return acc;
-          }, { pumps: [] as Pump[], invalidRows: [] as any[] });
+          }, { pumps: [] as Pump[], invalidRows: [] as RawPumpRow[] });
 
           resolve({ pumps, invalidRows });
         },

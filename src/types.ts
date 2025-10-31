@@ -23,6 +23,7 @@ export interface Pump {
   last_update: string;     // ISO
   value: number;           // numeric
   scheduledEnd?: string;   // ISO
+  scheduledStart?: string; // ISO
   // derived, non-persistent:
   promiseDate?: string;    // from PO line
 }

@@ -5,13 +5,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/Card";
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { formatCurrency } from "../../lib/format";
 
+interface TooltipPayload {
+  name: string;
+  value: number;
+  payload: { percent: string };
+}
+
 interface ValueBreakdownProps {
   pumps: Pump[];
 }
 
 const COLORS = ['#2563eb', '#7c3aed', '#db2777', '#ea580c', '#ca8a04', '#16a34a', '#0891b2', '#4f46e5'];
 
-const CustomTooltip = ({ active, payload }: any) => {
+const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: TooltipPayload[] }) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
@@ -92,7 +98,7 @@ export function ValueBreakdown({ pumps }: ValueBreakdownProps) {
               <Legend 
                 verticalAlign="bottom" 
                 height={36}
-                formatter={(value, entry: any) => `${value}: ${formatCurrency(entry.payload.value)}`}
+                formatter={(value, entry: { payload: TooltipPayload }) => `${value}: ${formatCurrency(entry.payload.value)}`}
               />
             </PieChart>
           </ResponsiveContainer>
@@ -124,7 +130,7 @@ export function ValueBreakdown({ pumps }: ValueBreakdownProps) {
               <Legend 
                 verticalAlign="bottom" 
                 height={36}
-                formatter={(value, entry: any) => `${value}: ${formatCurrency(entry.payload.value)}`}
+                formatter={(value, entry: { payload: TooltipPayload }) => `${value}: ${formatCurrency(entry.payload.value)}`}
               />
             </PieChart>
           </ResponsiveContainer>

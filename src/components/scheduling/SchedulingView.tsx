@@ -1,4 +1,6 @@
 // src/components/scheduling/SchedulingView.tsx
+import { useEffect } from "react";
+import { useApp } from "../../store";
 import { SchedulingSidebar } from "./SchedulingSidebar";
 import { DragAndDropContext } from "./DragAndDropContext";
 import { CalendarHeader } from "./CalendarHeader";
@@ -26,6 +28,10 @@ interface CalendarEventData {
 }
 
 export function SchedulingView() {
+  const { pumps } = useApp();
+  useEffect(() => {
+    console.log('pumps in SchedulingView:', pumps);
+  }, [pumps]);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEventData | null>(null);
 
   const handleEventClick = (event: CalendarEventData) => {

@@ -4,7 +4,7 @@ import { useDroppable } from '@dnd-kit/core';
 import { format } from 'date-fns';
 import { cn } from '../../lib/utils';
 import { useApp } from '../../store';
-import { Pump } from '../../types';
+
 
 // Placeholder for event data structure based on MainCalendarGrid.tsx
 interface CalendarEventData {

@@ -28,7 +28,7 @@ export function AddPoModal({ isOpen, onClose }: AddPoModalProps) {
     setLines(lines.filter((_, i) => i !== index));
   };
 
-  const handleLineChange = (index: number, field: keyof PoLine, value: any) => {
+  const handleLineChange = <T extends keyof PoLine>(index: number, field: T, value: PoLine[T]) => {
     const newLines = [...lines];
     newLines[index] = { ...newLines[index], [field]: value };
     setLines(newLines);

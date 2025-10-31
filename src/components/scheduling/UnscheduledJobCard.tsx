@@ -13,6 +13,7 @@ interface UnscheduledJobCardProps {
 }
 
 export function UnscheduledJobCard({ pump }: UnscheduledJobCardProps) {
+  console.log('pump prop:', pump);
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: pump.id,
     data: { pump },
@@ -21,7 +22,7 @@ export function UnscheduledJobCard({ pump }: UnscheduledJobCardProps) {
   const style = transform ? {
     transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
   } : undefined;
-  const { getModelLeadTimes } = useApp();
+  const getModelLeadTimes = useApp.getState().getModelLeadTimes;
 
   const leadTimes = useMemo(() => {
     return getModelLeadTimes(pump.model);

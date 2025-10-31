@@ -1,17 +1,15 @@
 // src/components/scheduling/DragAndDropContext.tsx
-import { DndContext, DragEndEvent, DragOverlay, useDraggable, UniqueIdentifier } from "@dnd-kit/core";
+import { DndContext, DragEndEvent, DragOverlay, UniqueIdentifier } from "@dnd-kit/core";
 import { useState } from "react";
-import { Pump } from "../../types";
 import { useApp } from "../../store";
 import { UnscheduledJobCard } from "./UnscheduledJobCard";
-import { CalendarEvent } from "./CalendarEvent";
 
 interface DragAndDropContextProps {
   children: React.ReactNode;
 }
 
 export function DragAndDropContext({ children }: DragAndDropContextProps) {
-  const { pumps, updatePumpStageAndDate } = useApp();
+  const { pumps, updatePump } = useApp();
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
 
   const handleDragStart = (event: { active: { id: UniqueIdentifier } }) => {
@@ -30,8 +28,7 @@ export function DragAndDropContext({ children }: DragAndDropContextProps) {
 
       if (pumpToMove) {
         // Simulate scheduling by moving the pump to the 'FABRICATION' stage
-        // and setting the scheduledStart date to the dropped date.
-        updatePumpStageAndDate(pumpId, "FABRICATION", targetDate);
+        updatePump(pumpId, { stage: "FABRICATION", scheduledStart: targetDate });
       }
     }
     setActiveId(null);

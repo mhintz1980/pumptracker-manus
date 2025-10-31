@@ -2,7 +2,7 @@
 import React from "react";
 import { Pump, Stage } from "../../types";
 import { StageColumn } from "./StageColumn";
-import { DndContext, DragEndEvent, DragOverlay, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
+import { DndContext, DragEndEvent, DragStartEvent, DragOverlay, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { useApp } from "../../store";
 import { toast } from "sonner";
 import { PumpCard } from "./PumpCard";
@@ -33,7 +33,7 @@ export function KanbanBoard({ pumps, onCardClick }: KanbanBoardProps) {
     }, {} as Record<Stage, Pump[]>);
   }, [pumps]);
 
-  const handleDragStart = (event: any) => {
+  const handleDragStart = (event: DragStartEvent) => {
     const pump = pumps.find(p => p.id === event.active.id);
     setActivePump(pump || null);
   };

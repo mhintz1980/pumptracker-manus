@@ -19,7 +19,7 @@ import { Button } from "./components/ui/Button";
 type View = "dashboard" | "kanban" | "scheduling";
 
 function App() {
-  const { load, filtered } = useApp();
+  const { load, filtered, loading } = useApp();
   const [isAddPoModalOpen, setIsAddPoModalOpen] = useState(false);
   const [currentView, setCurrentView] = useState<View>("dashboard");
   const [selectedPump, setSelectedPump] = useState<Pump | null>(null);
@@ -92,7 +92,7 @@ function App() {
         ) : currentView === "kanban" ? (
           <KanbanBoard pumps={filteredPumps} onCardClick={setSelectedPump} />
         ) : (
-          <SchedulingView />
+          loading ? <div>Loading...</div> : <SchedulingView />
         )}
       </main>
 

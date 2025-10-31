@@ -3,7 +3,7 @@ import { useApp } from "../../store";
 import { UnscheduledJobCard } from "./UnscheduledJobCard";
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/Card";
 import { ScrollArea } from "../ui/ScrollArea";
-import { cn } from "../../lib/utils";
+
 
 export function SchedulingSidebar() {
   const { pumps } = useApp();

@@ -1,6 +1,6 @@
 // src/components/kanban/PumpCard.tsx
 import { Pump } from "../../types";
-import { formatCurrency, formatDate } from "../../lib/format";
+import { formatCurrency, formatDate, formatPriorityColor } from "../../lib/format";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react";
@@ -26,13 +26,7 @@ export function PumpCard({ pump, onClick }: PumpCardProps) {
     opacity: isDragging ? 0.5 : 1,
   };
 
-  const priorityColor = {
-    Urgent: "border-red-500 bg-red-50 dark:bg-red-950/20",
-    Rush: "border-orange-500 bg-orange-50 dark:bg-orange-950/20",
-    High: "border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20",
-    Normal: "border-blue-500 bg-blue-50 dark:bg-blue-950/20",
-    Low: "border-gray-500 bg-gray-50 dark:bg-gray-950/20",
-  }[pump.priority];
+  const priorityColor = formatPriorityColor(pump.priority, 'bg');
 
   return (
     <div

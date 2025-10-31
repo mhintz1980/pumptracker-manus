@@ -1,7 +1,7 @@
 // src/components/scheduling/CalendarHeader.tsx
 import { ChevronLeft, ChevronRight, RefreshCw, Plus, Search, HelpCircle } from 'lucide-react';
 import { Button } from '../ui/Button';
-import { Avatar, AvatarFallback } from '../ui/Avatar'; // Assuming Avatar is a UI component
+
 
 export function CalendarHeader() {
   return (
@@ -39,7 +39,7 @@ export function CalendarHeader() {
           <Plus className="h-4 w-4" />
         </Button>
         <span className="text-sm text-muted-foreground">Administrator</span>
-        {/* Placeholder for Avatar component */}
+
         <div className="h-8 w-8 flex items-center justify-center rounded-full bg-blue-400 text-white font-bold text-sm">A</div>
         <Button variant="ghost" size="icon" className="h-8 w-8">
           <Search className="h-4 w-4" />

@@ -46,6 +46,7 @@ interface AppState {
   filters: Filters;
   collapsedStages: Record<Stage, boolean>;
   adapter: DataAdapter;
+  loading: boolean;
   
   // actions
   setAdapter: (a: DataAdapter) => void;
@@ -54,11 +55,13 @@ interface AppState {
   clearFilters: () => void;
   addPO: (payload: AddPoPayload) => void;
   moveStage: (id: string, to: Stage) => void;
+  updatePump: (id: string, patch: Partial<Pump>) => void;
   replaceDataset: (rows: Pump[]) => void;
   toggleStageCollapse: (stage: Stage) => void;
 
   // selectors
   filtered: () => Pump[];
+  getModelLeadTimes: (model: string) => Record<string, number> | undefined;
 }
 
 export const useApp = create<AppState>()(
@@ -71,12 +74,14 @@ export const useApp = create<AppState>()(
         ASSEMBLY: false, TESTING: false, SHIPPING: false, CLOSED: false
       } as Record<Stage, boolean>,
       adapter: LocalAdapter, // Default to LocalAdapter
+      loading: true,
       
       setAdapter: (a) => set({ adapter: a }),
 
       load: async () => {
+        set({ loading: true });
         const rows = await get().adapter.load();
-        set({ pumps: rows });
+        set({ pumps: rows, loading: false });
       },
       
       setFilters: (f) => set({ filters: { ...get().filters, ...f } }),
@@ -113,6 +118,15 @@ export const useApp = create<AppState>()(
         get().adapter.update(id, { stage: to, last_update: now });
       },
 
+      updatePump: (id, patch) => {
+        const now = new Date().toISOString();
+        const next = get().pumps.map(p =>
+          p.id === id ? { ...p, ...patch, last_update: now } : p
+        );
+        set({ pumps: next });
+        get().adapter.update(id, { ...patch, last_update: now });
+      },
+
       replaceDataset: (rows) => {
         set({ pumps: rows });
         get().adapter.replaceAll(rows);
@@ -128,6 +142,16 @@ export const useApp = create<AppState>()(
       },
 
       filtered: () => applyFilters(get().pumps, get().filters),
+
+      getModelLeadTimes: (model: string) => {
+        // This is a mock implementation. In a real scenario, this would come from a database or config file.
+        const leadTimes: Record<string, Record<string, number>> = {
+          "5-3000": { fabrication: 1.5, powder_coat: 0.5, assembly: 1, testing: 0.5 },
+          "7-3000": { fabrication: 2, powder_coat: 0.5, assembly: 1.5, testing: 0.5 },
+          "10-5000": { fabrication: 2.5, powder_coat: 1, assembly: 2, testing: 1 },
+        };
+        return leadTimes[model];
+      },
     }),
     { 
       name: "pumptracker-lite",
