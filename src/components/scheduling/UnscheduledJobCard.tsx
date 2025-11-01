@@ -13,7 +13,6 @@ interface UnscheduledJobCardProps {
 }
 
 export function UnscheduledJobCard({ pump }: UnscheduledJobCardProps) {
-  console.log('pump prop:', pump);
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: pump.id,
     data: { pump },
@@ -37,21 +36,20 @@ export function UnscheduledJobCard({ pump }: UnscheduledJobCardProps) {
       {...listeners}
       {...attributes}
       className={cn(
-        "cursor-grab transition-all duration-150 active:scale-[1.02] active:shadow-lg",
-        "border-l-4",
+        "cursor-grab transition-all duration-150 active:scale-[1.02] active:shadow-glow",
         formatPriorityColor(pump.priority, "border")
       )}
       data-pump-id={pump.id}
     >
       <CardHeader className="p-3 pb-1">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-semibold truncate">
+          <CardTitle className="text-sm font-semibold text-white truncate">
             {pump.model}
           </CardTitle>
           <Badge
             variant="outline"
             className={cn(
-              "text-xs font-medium",
+              "text-xs font-medium border-white/15",
               formatPriorityColor(pump.priority, "text")
             )}
           >
@@ -59,16 +57,15 @@ export function UnscheduledJobCard({ pump }: UnscheduledJobCardProps) {
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className="p-3 pt-1 text-xs text-muted-foreground">
-        <p className="truncate">
+      <CardContent className="p-3 pt-1 text-xs text-foreground/65">
+        <p className="truncate text-foreground/80">
           PO: {pump.po} | S/N: {pump.serial}
         </p>
         <p className="truncate">Customer: {pump.customer}</p>
-        <p className="text-primary font-medium mt-1">
+        <p className="mt-1 font-medium text-white">
           Build Time: {totalDays} days
         </p>
       </CardContent>
     </Card>
   );
 }
-

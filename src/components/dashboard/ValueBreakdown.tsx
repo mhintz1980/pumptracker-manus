@@ -2,7 +2,7 @@
 import React from "react";
 import { Pump } from "../../types";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/Card";
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, LegendPayload } from "recharts";
 import { formatCurrency } from "../../lib/format";
 
 interface TooltipPayload {
@@ -95,10 +95,13 @@ export function ValueBreakdown({ pumps }: ValueBreakdownProps) {
                 ))}
               </Pie>
               <Tooltip content={<CustomTooltip />} />
-              <Legend 
-                verticalAlign="bottom" 
+              <Legend
+                verticalAlign="bottom"
                 height={36}
-                formatter={(value, entry: { payload: TooltipPayload }) => `${value}: ${formatCurrency(entry.payload.value)}`}
+                formatter={(value: string, entry: LegendPayload) => {
+                  const payload = entry.payload as { value: number };
+                  return `${value}: ${formatCurrency(payload.value)}`;
+                }}
               />
             </PieChart>
           </ResponsiveContainer>
@@ -127,10 +130,13 @@ export function ValueBreakdown({ pumps }: ValueBreakdownProps) {
                 ))}
               </Pie>
               <Tooltip content={<CustomTooltip />} />
-              <Legend 
-                verticalAlign="bottom" 
+              <Legend
+                verticalAlign="bottom"
                 height={36}
-                formatter={(value, entry: { payload: TooltipPayload }) => `${value}: ${formatCurrency(entry.payload.value)}`}
+                formatter={(value: string, entry: LegendPayload) => {
+                  const payload = entry.payload as { value: number };
+                  return `${value}: ${formatCurrency(payload.value)}`;
+                }}
               />
             </PieChart>
           </ResponsiveContainer>

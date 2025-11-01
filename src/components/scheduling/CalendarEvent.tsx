@@ -21,7 +21,7 @@ export function CalendarEvent({
   return (
     <div
       className={cn(
-        "h-full rounded-md shadow-md text-xs font-medium p-1 overflow-hidden cursor-pointer transition-all duration-100 ease-in-out",
+        "flex h-full items-center rounded-xl border border-white/10 px-3 text-[11px] font-semibold tracking-wide text-white shadow-soft backdrop-blur cursor-pointer transition-all duration-150",
         color,
         isDragging && "opacity-50 border-2 border-dashed border-gray-600"
       )}
@@ -32,8 +32,7 @@ export function CalendarEvent({
       }}
       onClick={onClick}
     >
-      <span className="truncate block text-white">{title}</span>
+      <span className="truncate">{title}</span>
     </div>
   );
 }
-

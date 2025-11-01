@@ -58,8 +58,8 @@ export function MainCalendarGrid({ onEventClick }: MainCalendarGridProps) {
       <div
         ref={setNodeRef}
         className={cn(
-          "border-r border-dashed border-border/50",
-          isOver && "bg-green-100/50 dark:bg-green-900/50 transition-colors"
+          "border-r border-white/10 transition-colors",
+          isOver && "bg-emerald-400/15"
         )}
       ></div>
     );
@@ -83,7 +83,7 @@ export function MainCalendarGrid({ onEventClick }: MainCalendarGridProps) {
         id: pump.id,
         title: `${pump.model} - ${pump.po}`,
         fullTitle: `${pump.model} - ${pump.po} for ${pump.customer}`,
-        color: 'bg-blue-500 hover:bg-blue-600', // Scheduled color
+        color: 'bg-gradient-to-r from-blue-500/60 to-sky-400/60 hover:from-blue-500 hover:to-sky-400',
         startDay: (startDayIndex % 7), // Day of the week (0-6)
         span: span,
         week: Math.floor(startDayIndex / 7),
@@ -99,26 +99,28 @@ export function MainCalendarGrid({ onEventClick }: MainCalendarGridProps) {
 
   // 3. Render the grid
   return (
-    <div className="flex-1 overflow-auto bg-background">
+    <div className="flex-1 overflow-auto bg-transparent">
       <div className="min-w-[1000px]">
         {Array.from({ length: weeks }).map((_, weekIndex) => {
           const weekStart = weekIndex * 7;
           const weekDates = viewDates.slice(weekStart, weekStart + 7);
           
           return (
-            <div key={weekIndex} className="border-b">
+            <div key={weekIndex} className="border-b border-white/10">
               {/* Week Header */}
-              <div className="grid grid-cols-7 bg-card border-b sticky top-0 z-10">
+              <div className="grid grid-cols-7 border-b border-white/10 bg-[hsl(var(--surface-200)_/_0.92)] sticky top-0 z-10 backdrop-blur">
                 {weekDates.map((date, dayIndex) => (
                   <div
                     key={dayIndex}
                     className={cn(
-                      "border-r p-2 text-center",
-                      date.toDateString() === today.toDateString() && 'bg-primary/10' // Highlight today
+                      "border-r border-white/10 p-3 text-center",
+                      date.toDateString() === today.toDateString() && 'bg-white/10 rounded-t-xl'
                     )}
                   >
-                    <div className="text-xs text-muted-foreground">{date.toLocaleDateString('en-US', { weekday: 'short' })}</div>
-                    <div className={cn("text-lg", date.toDateString() === today.toDateString() && 'text-primary font-bold')}>
+                    <div className="text-xs uppercase tracking-[0.2em] text-foreground/60">
+                      {date.toLocaleDateString('en-US', { weekday: 'short' })}
+                    </div>
+                    <div className={cn("text-lg font-semibold text-white", date.toDateString() === today.toDateString() && 'text-primary')}>
                       {date.getDate()}
                     </div>
                   </div>
@@ -135,7 +137,7 @@ export function MainCalendarGrid({ onEventClick }: MainCalendarGridProps) {
                 </div>
 
                 {/* Events for this week */}
-                <div className="relative p-2 grid grid-cols-7 gap-y-1" style={{ gridAutoRows: '28px' }}>
+                <div className="relative grid grid-cols-7 gap-y-1 p-2" style={{ gridAutoRows: '28px' }}>
                   {scheduledEvents
                     .filter((event) => event.week === weekIndex)
                     .map((event) => (
@@ -166,4 +168,3 @@ export function MainCalendarGrid({ onEventClick }: MainCalendarGridProps) {
     </div>
   );
 }
-

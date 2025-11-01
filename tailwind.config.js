@@ -57,6 +57,15 @@ module.exports = {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      boxShadow: {
+        soft: "0 18px 40px -24px rgba(8, 12, 32, 0.8), 0 10px 24px -18px rgba(8, 12, 32, 0.75)",
+        elevated: "0 25px 55px -30px rgba(8, 15, 35, 0.9), 0 18px 45px -35px rgba(8, 15, 35, 0.6)",
+        glow: "0 12px 30px -16px rgba(59, 130, 246, 0.75)",
+        insetSubtle: "inset 0 1px 0 rgba(255, 255, 255, 0.06)",
+      },
+      backgroundImage: {
+        "app-gradient": "radial-gradient(120% 120% at -10% -20%, rgba(59, 130, 246, 0.18), transparent), radial-gradient(120% 120% at 110% 0%, rgba(14, 165, 233, 0.15), transparent)",
+      },
       keyframes: {
         "accordion-down": {
           from: { height: "0" },
@@ -75,4 +84,3 @@ module.exports = {
   },
   plugins: [require("tailwindcss-animate")],
 }
-

@@ -24,6 +24,13 @@ function App() {
   const [currentView, setCurrentView] = useState<View>("dashboard");
   const [selectedPump, setSelectedPump] = useState<Pump | null>(null);
 
+  const navButtonClasses = (view: View) =>
+    `h-10 rounded-full border px-4 text-sm font-medium transition-all ${
+      currentView === view
+        ? "border-white/25 bg-white/20 text-white shadow-glow"
+        : "border-white/10 bg-white/10 text-white/70 hover:text-white hover:bg-white/15"
+    }`;
+
   useEffect(() => {
     load();
   }, [load]);
@@ -31,43 +38,46 @@ function App() {
   const filteredPumps = filtered();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background bg-app-gradient text-foreground">
       {/* Header */}
-      <header className="bg-card border-b border-border shadow-sm sticky top-0 z-40">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="bg-primary/10 p-2 rounded-lg">
-                <Package className="h-6 w-6 text-primary" />
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-gradient-to-r from-[#0d5bff] via-[#1e72ff] to-[#39a3ff] shadow-glow">
+        <div className="container mx-auto px-4 py-5">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between text-white">
+            <div className="flex items-center gap-4">
+              <div className="rounded-2xl bg-white/15 p-2 shadow-glass">
+                <Package className="h-7 w-7" />
               </div>
               <div>
-                <h1 className="text-xl font-bold">PumpTracker Lite</h1>
-                <p className="text-xs text-muted-foreground">Production Management System</p>
+                <h1 className="text-2xl font-semibold tracking-tight">PumpTracker Lite</h1>
+                <p className="text-xs uppercase tracking-[0.25em] text-white/70">Production Management System</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 md:justify-end">
               <Button
-                variant={currentView === "dashboard" ? "default" : "outline"}
-                size="sm"
+                variant="ghost"
+                size="default"
+                className={navButtonClasses("dashboard")}
                 onClick={() => setCurrentView("dashboard")}
               >
-                <BarChart3 className="h-4 w-4 mr-1" />
+                <BarChart3 className="h-4 w-4 mr-2" />
                 Dashboard
               </Button>
               <Button
-                variant={currentView === "kanban" ? "default" : "outline"}
-                size="sm"
+                variant="ghost"
+                size="default"
+                className={navButtonClasses("kanban")}
                 onClick={() => setCurrentView("kanban")}
               >
-                <Layout className="h-4 w-4 mr-1" />
+                <Layout className="h-4 w-4 mr-2" />
                 Kanban
               </Button>
               <Button
-                variant={currentView === "scheduling" ? "default" : "outline"}
-                size="sm"
+                variant="ghost"
+                size="default"
+                className={navButtonClasses("scheduling")}
                 onClick={() => setCurrentView("scheduling")}
               >
-                <Calendar className="h-4 w-4 mr-1" />
+                <Calendar className="h-4 w-4 mr-2" />
                 Scheduling
               </Button>
               <AddPoButton onClick={() => setIsAddPoModalOpen(true)} />
@@ -80,7 +90,7 @@ function App() {
       <FilterBar />
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-6">
+      <main className="container mx-auto px-4 py-10 space-y-6">
         {currentView === "dashboard" ? (
           <>
             <KpiStrip pumps={filteredPumps} />
@@ -105,21 +115,21 @@ function App() {
       {/* Pump Details Modal */}
       {selectedPump && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md"
           onClick={() => setSelectedPump(null)}
         >
           <div
-            className="bg-card rounded-lg shadow-xl w-full max-w-md p-6 m-4 border border-border"
+            className="surface-elevated shadow-frame border border-white/10 rounded-2xl w-full max-w-md p-6 m-4"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-start mb-4">
               <div>
-                <h2 className="text-xl font-semibold">Pump Details</h2>
-                <p className="text-sm text-muted-foreground">Serial #{selectedPump.serial}</p>
+                <h2 className="text-xl font-semibold text-white">Pump Details</h2>
+                <p className="text-sm text-foreground/70">Serial #{selectedPump.serial}</p>
               </div>
               <button
                 onClick={() => setSelectedPump(null)}
-                className="text-muted-foreground hover:text-foreground transition-colors"
+                className="text-foreground/60 hover:text-white transition-colors"
               >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -128,60 +138,60 @@ function App() {
             </div>
             
             <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-4 p-3 bg-muted/30 rounded-lg">
+              <div className="grid grid-cols-2 gap-4 p-3 surface-panel rounded-xl border border-white/10">
                 <div>
-                  <p className="text-xs text-muted-foreground mb-1">PO Number</p>
-                  <p className="font-medium">{selectedPump.po}</p>
+                  <p className="text-xs text-foreground/60 mb-1">PO Number</p>
+                  <p className="font-medium text-white">{selectedPump.po}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground mb-1">Customer</p>
-                  <p className="font-medium">{selectedPump.customer}</p>
+                  <p className="text-xs text-foreground/60 mb-1">Customer</p>
+                  <p className="font-medium text-white">{selectedPump.customer}</p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 p-3 bg-muted/30 rounded-lg">
+              <div className="grid grid-cols-2 gap-4 p-3 surface-panel rounded-xl border border-white/10">
                 <div>
-                  <p className="text-xs text-muted-foreground mb-1">Model</p>
-                  <p className="font-medium">{selectedPump.model}</p>
+                  <p className="text-xs text-foreground/60 mb-1">Model</p>
+                  <p className="font-medium text-white">{selectedPump.model}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground mb-1">Stage</p>
-                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                  <p className="text-xs text-foreground/60 mb-1">Stage</p>
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-white/10 text-white">
                     {selectedPump.stage}
                   </span>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 p-3 bg-muted/30 rounded-lg">
+              <div className="grid grid-cols-2 gap-4 p-3 surface-panel rounded-xl border border-white/10">
                 <div>
-                  <p className="text-xs text-muted-foreground mb-1">Priority</p>
+                  <p className="text-xs text-foreground/60 mb-1">Priority</p>
                   <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                     selectedPump.priority === "Urgent" || selectedPump.priority === "Rush"
-                      ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
+                      ? "bg-red-500/15 text-red-300"
                       : selectedPump.priority === "High"
-                      ? "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400"
-                      : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400"
+                      ? "bg-orange-500/15 text-orange-200"
+                      : "bg-white/10 text-foreground/70"
                   }`}>
                     {selectedPump.priority}
                   </span>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground mb-1">Value</p>
-                  <p className="font-medium">${selectedPump.value.toLocaleString()}</p>
+                  <p className="text-xs text-foreground/60 mb-1">Value</p>
+                  <p className="font-medium text-white">${selectedPump.value.toLocaleString()}</p>
                 </div>
               </div>
 
               {selectedPump.powder_color && (
-                <div className="p-3 bg-muted/30 rounded-lg">
-                  <p className="text-xs text-muted-foreground mb-1">Powder Coat Color</p>
-                  <p className="font-medium">{selectedPump.powder_color}</p>
+                <div className="p-3 surface-panel rounded-xl border border-white/10">
+                  <p className="text-xs text-foreground/60 mb-1">Powder Coat Color</p>
+                  <p className="font-medium text-white">{selectedPump.powder_color}</p>
                 </div>
               )}
 
               {selectedPump.scheduledEnd && (
-                <div className="p-3 bg-muted/30 rounded-lg">
-                  <p className="text-xs text-muted-foreground mb-1">Scheduled End Date</p>
-                  <p className="font-medium">
+                <div className="p-3 surface-panel rounded-xl border border-white/10">
+                  <p className="text-xs text-foreground/60 mb-1">Scheduled End Date</p>
+                  <p className="font-medium text-white">
                     {new Date(selectedPump.scheduledEnd).toLocaleDateString('en-US', {
                       weekday: 'short',
                       year: 'numeric',
@@ -192,9 +202,9 @@ function App() {
                 </div>
               )}
 
-              <div className="p-3 bg-muted/30 rounded-lg">
-                <p className="text-xs text-muted-foreground mb-1">Last Updated</p>
-                <p className="font-medium">
+              <div className="p-3 surface-panel rounded-xl border border-white/10">
+                <p className="text-xs text-foreground/60 mb-1">Last Updated</p>
+                <p className="font-medium text-white">
                   {new Date(selectedPump.last_update).toLocaleDateString('en-US', {
                     weekday: 'short',
                     year: 'numeric',
@@ -221,4 +231,3 @@ function App() {
 }
 
 export default App;
-

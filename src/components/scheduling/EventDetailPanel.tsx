@@ -25,48 +25,49 @@ export function EventDetailPanel({ event, onClose }: EventDetailPanelProps) {
   if (!event) return null;
 
   return (
-    <div className="w-[300px] border-l bg-card p-4 flex flex-col justify-between">
+    <div className="w-[320px] border-l border-white/10 bg-[hsl(var(--surface-200)_/_0.85)] backdrop-blur px-5 py-6 flex flex-col justify-between">
       <div>
-        <div className="flex items-start justify-between mb-4">
-          <h3 className="text-lg font-semibold">{event.title}</h3>
-          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onClose}>
+        <div className="flex items-start justify-between mb-5">
+          <h3 className="text-lg font-semibold text-white">{event.title}</h3>
+          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full border border-white/10" onClick={onClose}>
             <X className="h-4 w-4" />
           </Button>
         </div>
 
-        <div className="space-y-4 text-sm">
+        <div className="space-y-5 text-sm">
           <div>
-            <div className="text-muted-foreground mb-1">Date</div>
-            <div className="font-medium">{event.dateRange}</div>
+            <div className="text-foreground/60 mb-1 uppercase tracking-[0.2em] text-[11px]">Date</div>
+            <div className="font-medium text-white">{event.dateRange}</div>
           </div>
 
           <div>
-            <div className="text-muted-foreground mb-1">Calendar:</div>
-            <Badge className={cn(event.calendarColor, "text-white")}>
+            <div className="text-foreground/60 mb-1 uppercase tracking-[0.2em] text-[11px]">Calendar</div>
+            <Badge className={cn(event.calendarColor, "border-none shadow-soft text-white")}
+              variant="outline"
+            >
               {event.calendar}
             </Badge>
           </div>
 
           <div>
-            <div className="text-muted-foreground mb-1">Type:</div>
-            <Badge variant="outline" className="gap-1">
+            <div className="text-foreground/60 mb-1 uppercase tracking-[0.2em] text-[11px]">Type</div>
+            <Badge variant="outline" className="gap-2 border-white/10 text-white/80">
               <span>{event.typeIcon}</span>
               {event.type}
             </Badge>
           </div>
 
           <div>
-            <div className="text-muted-foreground mb-1">Description:</div>
-            <div className="text-foreground">{event.description}</div>
+            <div className="text-foreground/60 mb-1 uppercase tracking-[0.2em] text-[11px]">Description</div>
+            <div className="text-foreground/80 leading-relaxed">{event.description}</div>
           </div>
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 border-t pt-4">
-        <Button variant="outline">Edit</Button>
-        <Button variant="destructive">Delete</Button>
+      <div className="flex justify-end gap-2 border-t border-white/10 pt-4">
+        <Button variant="outline" className="rounded-full">Edit</Button>
+        <Button variant="destructive" className="rounded-full">Delete</Button>
       </div>
     </div>
   );
 }
-

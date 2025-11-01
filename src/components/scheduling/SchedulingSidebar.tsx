@@ -12,17 +12,17 @@ export function SchedulingSidebar() {
   ); // Assuming NOT STARTED and FABRICATION are unscheduled/backlog
 
   return (
-    <div className="w-[300px] border-r bg-muted/20 flex flex-col h-full p-4">
-      <Card className="flex flex-col h-full">
-        <CardHeader className="py-3 border-b">
-          <CardTitle className="text-lg flex justify-between items-center">
+    <div className="w-[300px] border-r border-white/10 bg-[hsl(var(--surface-100)_/_0.7)] backdrop-blur flex flex-col h-full p-4">
+      <Card className="flex h-full flex-col">
+        <CardHeader className="border-b border-white/10 py-4">
+          <CardTitle className="flex items-center justify-between text-base text-white">
             Unscheduled Jobs
-            <span className="text-sm font-normal text-muted-foreground">
+            <span className="text-sm font-normal text-foreground/60">
               {unscheduledPumps.length}
             </span>
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-3 flex-1 overflow-hidden">
+        <CardContent className="flex-1 overflow-hidden p-3">
           <ScrollArea className="h-full pr-3">
             <div className="space-y-3">
               {unscheduledPumps.map((pump) => (
@@ -35,4 +35,3 @@ export function SchedulingSidebar() {
     </div>
   );
 }
-

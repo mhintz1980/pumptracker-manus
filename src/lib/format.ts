@@ -29,29 +29,29 @@ export function round(value: number, decimals: number = 0): number {
 export function formatPriorityColor(priority: string, type: 'border' | 'text' | 'bg'): string {
   const colors = {
     Urgent: {
-      border: "border-red-500",
-      text: "text-red-500",
-      bg: "bg-red-50 dark:bg-red-950/20",
+      border: "border-l-[3px] border-rose-400/80",
+      text: "text-rose-300",
+      bg: "ring-1 ring-rose-400/25 bg-rose-500/10",
     },
     Rush: {
-      border: "border-orange-500",
-      text: "text-orange-500",
-      bg: "bg-orange-50 dark:bg-orange-950/20",
+      border: "border-l-[3px] border-orange-400/80",
+      text: "text-orange-200",
+      bg: "ring-1 ring-orange-400/25 bg-orange-500/10",
     },
     High: {
-      border: "border-yellow-500",
-      text: "text-yellow-500",
-      bg: "bg-yellow-50 dark:bg-yellow-950/20",
+      border: "border-l-[3px] border-amber-300/80",
+      text: "text-amber-200",
+      bg: "ring-1 ring-amber-300/25 bg-amber-400/10",
     },
     Normal: {
-      border: "border-blue-500",
-      text: "text-blue-500",
-      bg: "bg-blue-50 dark:bg-blue-950/20",
+      border: "border-l-[3px] border-sky-400/80",
+      text: "text-sky-200",
+      bg: "ring-1 ring-sky-400/20 bg-sky-500/10",
     },
     Low: {
-      border: "border-gray-500",
-      text: "text-gray-500",
-      bg: "bg-gray-50 dark:bg-gray-950/20",
+      border: "border-l-[3px] border-slate-500/70",
+      text: "text-slate-300",
+      bg: "ring-1 ring-slate-500/20 bg-slate-500/10",
     },
   };
 
@@ -63,4 +63,3 @@ export function formatPriorityColor(priority: string, type: 'border' | 'text' | 
 
   return priorityColors[type];
 }
-
