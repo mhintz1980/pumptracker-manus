@@ -49,8 +49,8 @@ function normalizeRow(r: RawPumpRow): Pump | null {
   if (!r.id && !r.serial) return null;
   if (!r.po || !r.customer || !r.model || !r.stage) return null;
 
-  const stage = r.stage.toUpperCase().replace(/ /g, '_') as Stage;
-  const priority = r.priority || "Normal" as Priority;
+  const stage = r.stage.toUpperCase() as Stage;
+  const priority = (r.priority || "Normal") as Priority;
 
   // Basic validation for stage and priority
   const validStages: Stage[] = ["NOT STARTED", "FABRICATION", "POWDER COAT", "ASSEMBLY", "TESTING", "SHIPPING", "CLOSED"];

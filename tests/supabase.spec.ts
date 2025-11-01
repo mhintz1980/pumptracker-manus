@@ -31,19 +31,19 @@ describe('SupabaseAdapter', () => {
     const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
     const error = new Error('Network error');
+    const selectSpy = vi.fn()
+        .mockResolvedValueOnce({ data: null, error })
+        .mockResolvedValueOnce({ data: null, error })
+        .mockResolvedValueOnce({ data: [{ id: '1', name: 'Test Pump' }], error: null });
+
     supabase.from.mockReturnValue({
-        select: vi.fn()
-        .mockResolvedValueOnce({ data: null, error })
-        .mockResolvedValueOnce({ data: null, error })
-        .mockResolvedValueOnce({ data: [{ id: '1', name: 'Test Pump' }], error: null }),
+        select: selectSpy
     });
 
     const data = await SupabaseAdapter.load();
 
     expect(supabase.from).toHaveBeenCalledTimes(3);
-    expect(supabase.from.mock.results[0].value.select).toHaveBeenCalledTimes(1);
-    expect(supabase.from.mock.results[1].value.select).toHaveBeenCalledTimes(1);
-    expect(supabase.from.mock.results[2].value.select).toHaveBeenCalledTimes(1);
+    expect(selectSpy).toHaveBeenCalledTimes(3);
     expect(consoleErrorSpy).toHaveBeenCalledTimes(2);
     expect(consoleLogSpy).toHaveBeenCalledWith('Retrying in 500ms...');
     expect(consoleLogSpy).toHaveBeenCalledWith('Retrying in 1000ms...');
@@ -58,16 +58,15 @@ describe('SupabaseAdapter', () => {
     const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
     const error = new Error('Network error');
+    const selectSpy = vi.fn().mockResolvedValue({ data: null, error });
     supabase.from.mockReturnValue({
-        select: vi.fn().mockResolvedValue({ data: null, error }),
+        select: selectSpy,
     });
 
     await expect(SupabaseAdapter.load()).rejects.toThrow('Network error');
 
     expect(supabase.from).toHaveBeenCalledTimes(3);
-    expect(supabase.from.mock.results[0].value.select).toHaveBeenCalledTimes(1);
-    expect(supabase.from.mock.results[1].value.select).toHaveBeenCalledTimes(1);
-    expect(supabase.from.mock.results[2].value.select).toHaveBeenCalledTimes(1);
+    expect(selectSpy).toHaveBeenCalledTimes(3);
     expect(consoleErrorSpy).toHaveBeenCalledTimes(4);
     expect(consoleLogSpy).toHaveBeenCalledWith('Retrying in 500ms...');
     expect(consoleLogSpy).toHaveBeenCalledWith('Retrying in 1000ms...');
