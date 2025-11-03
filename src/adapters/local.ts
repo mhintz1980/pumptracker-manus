@@ -2,7 +2,7 @@
 import { Pump, DataAdapter } from "../types";
 import { seed } from "../lib/seed";
 
-const KEY = "pumptracker-data-v1";
+const KEY = "pumptracker-data-v2-catalog";
 
 export const LocalAdapter: DataAdapter = {
   async load(): Promise<Pump[]> {

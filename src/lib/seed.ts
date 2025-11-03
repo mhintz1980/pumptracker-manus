@@ -1,69 +1,282 @@
 // src/lib/seed.ts
 import { Pump, Stage, Priority } from "../types";
 import { nanoid } from "nanoid";
+import catalogData from "../data/pumptracker-data.json";
 
-const CUSTOMERS = ["Acme Corp", "Beta Solutions", "Gamma Industries", "Delta Tech", "Epsilon Energy", "Zeta Mfg"];
-const MODELS = ["P-100", "P-250-HD", "P-500-SS", "P-750-HP"];
-const STAGES: Stage[] = ["NOT STARTED", "FABRICATION", "POWDER COAT", "ASSEMBLY", "TESTING", "SHIPPING", "CLOSED"];
-const COLORS = ["Red", "Blue", "Green", "Yellow", "Black", "White"];
-const PRIORITIES: Priority[] = ["Low", "Normal", "High", "Rush", "Urgent"];
+// Type definitions for catalog data
+interface CatalogModel {
+  model: string;
+  description: string;
+  price: number | null;
+  bom: {
+    engine: string | null;
+    gearbox: string | null;
+    control_panel: string | null;
+  };
+  lead_times: {
+    fabrication: number;
+    powder_coat: number;
+    assembly: number;
+    testing: number;
+    total_days: number;
+  };
+}
 
+interface CatalogData {
+  models: CatalogModel[];
+  customers: string[];
+  productionStages: string[];
+}
+
+// Stage name conversion: Title Case → Uppercase
+function convertStageName(stageName: string): Stage {
+  const stageMap: Record<string, Stage> = {
+    "Not Started": "NOT STARTED",
+    "Fabrication": "FABRICATION",
+    "Powder Coat": "POWDER COAT",
+    "Assembly": "ASSEMBLY",
+    "Testing": "TESTING",
+    "Shipping": "SHIPPING",
+    "CLOSED": "CLOSED" // Add support for existing uppercase
+  };
+  return stageMap[stageName] || "NOT STARTED";
+}
+
+// Get production stages from catalog and add CLOSED
+const CATALOG_STAGES: Stage[] = [
+  ...(catalogData as CatalogData).productionStages.map(convertStageName),
+  "CLOSED"
+];
+
+// Customers from catalog
+const CUSTOMERS = (catalogData as CatalogData).customers;
+
+// Models from catalog
+const CATALOG_MODELS = (catalogData as CatalogData).models;
+
+// Colors for powder coating
+const COLORS = ["Red", "Blue", "Green", "Yellow", "Black", "White", "Orange", "Gray"];
+
+// Price fallback logic
+function getEffectivePrice(basePrice: number | null, model: string): number {
+  if (basePrice !== null) return basePrice;
+
+  // Fallback prices for models with null prices
+  if (model.includes("SAFE")) return model.includes("4") ? 32000 : 52000;
+  if (model.includes("RL")) return 48000;  // Rotary Lobe
+  if (model.includes("HC")) return 38000;  // High Capacity
+
+  // Default fallback
+  return 28000;
+}
+
+// BOM component fallback logic
+function getBomComponent(component: string | null, type: string): string | null {
+  if (component !== null) return component;
+
+  // Standard fallbacks
+  const fallbacks: Record<string, string> = {
+    engine: "STANDARD ENGINE",
+    gearbox: "STANDARD GEARBOX",
+    control_panel: "STANDARD CONTROL"
+  };
+
+  return fallbacks[type] || null;
+}
+
+// Serial number management
 const usedSerials = new Set<number>();
-
-function getRandomElement<T>(arr: T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
-
-function getRandomInt(min: number, max: number): number {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
+let nextSerial = 1000;
 
 function genSerial(): number {
   let serial: number;
   do {
-    serial = getRandomInt(1000, 9999);
+    serial = nextSerial++;
   } while (usedSerials.has(serial));
   usedSerials.add(serial);
   return serial;
 }
 
-function getRandomDate(start: Date, end: Date): Date {
-  return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
-}
+// Business day calculation (excludes weekends)
+function addBusinessDays(startDate: Date, days: number): Date {
+  const result = new Date(startDate);
+  let businessDays = 0;
 
-function generatePump(): Pump {
-  const customer = getRandomElement(CUSTOMERS);
-  const model = getRandomElement(MODELS);
-  const stage = getRandomElement(STAGES);
-  const priority = getRandomElement(PRIORITIES);
-  const hasColor = Math.random() > 0.5;
-  const value = getRandomInt(5000, 50000);
-
-  const now = new Date();
-  const scheduledEnd = getRandomDate(new Date(now.getTime() - 6 * 7 * 24 * 60 * 60 * 1000), new Date(now.getTime() + 6 * 7 * 24 * 60 * 60 * 1000)).toISOString();
-  const lastUpdate = getRandomDate(new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000), now).toISOString();
-
-  return {
-    id: nanoid(),
-    serial: genSerial(),
-    po: `PO-${getRandomInt(10000, 99999)}`,
-    customer,
-    model,
-    stage,
-    priority,
-    powder_color: hasColor ? getRandomElement(COLORS) : undefined,
-    last_update: lastUpdate,
-    value,
-    scheduledEnd,
-  };
-}
-
-export function seed(count: number = 80): Pump[] {
-  usedSerials.clear();
-  const pumps: Pump[] = [];
-  for (let i = 0; i < count; i++) {
-    pumps.push(generatePump());
+  while (businessDays < days) {
+    result.setDate(result.getDate() + 1);
+    const dayOfWeek = result.getDay();
+    if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Not Saturday (6) or Sunday (0)
+      businessDays++;
+    }
   }
+  return result;
+}
+
+// PO number generation
+let poCounter = 1;
+function genPONumber(): string {
+  return `PO2025-${String(poCounter++).padStart(4, '0')}`;
+}
+
+// Priority assignment logic
+function assignPriority(model: CatalogModel): Priority {
+  if (model.model.includes("SAFE")) return "High";
+  if (model.model.includes("HP")) return "Normal";
+  if (model.model.includes("RL")) return "Normal";
+  return "Normal"; // Default priority
+}
+
+// Generate deterministic pump from catalog model
+function generatePumpFromCatalog(
+  model: CatalogModel,
+  customer: string,
+  poBase: string,
+  quantity: number,
+  startIndex: number
+): Pump[] {
+  const pumps: Pump[] = [];
+  const basePrice = getEffectivePrice(model.price, model.model);
+  const priority = assignPriority(model);
+  const hasColor = Math.random() > 0.3; // 70% have powder coat
+
+  for (let i = 0; i < quantity; i++) {
+    const serial = genSerial();
+    const po = `${poBase}-${String(startIndex + i + 1).padStart(2, '0')}`;
+
+    // Generate realistic schedule based on lead times
+    const now = new Date();
+    const poDate = addBusinessDays(now, -Math.floor(Math.random() * 30)); // PO placed in last 30 business days
+    const fabricationStart = addBusinessDays(poDate, Math.floor(Math.random() * 5)); // Start within 5 days
+    const fabricationEnd = addBusinessDays(fabricationStart, model.lead_times.fabrication);
+    const powderCoatEnd = addBusinessDays(fabricationEnd, model.lead_times.powder_coat);
+    const assemblyEnd = addBusinessDays(powderCoatEnd, model.lead_times.assembly);
+    const testingEnd = addBusinessDays(assemblyEnd, model.lead_times.testing);
+
+    // Determine current stage based on dates
+    let currentStage: Stage = "NOT STARTED";
+    let lastUpdate = poDate.toISOString();
+    let scheduledEnd = testingEnd.toISOString();
+
+    const nowTime = now.getTime();
+    if (nowTime >= testingEnd.getTime()) {
+      currentStage = Math.random() > 0.7 ? "CLOSED" : "SHIPPING";
+      lastUpdate = testingEnd.toISOString();
+    } else if (nowTime >= assemblyEnd.getTime()) {
+      currentStage = "TESTING";
+      lastUpdate = assemblyEnd.toISOString();
+    } else if (nowTime >= powderCoatEnd.getTime()) {
+      currentStage = "ASSEMBLY";
+      lastUpdate = powderCoatEnd.toISOString();
+    } else if (nowTime >= fabricationEnd.getTime()) {
+      currentStage = "POWDER COAT";
+      lastUpdate = fabricationEnd.toISOString();
+    } else if (nowTime >= fabricationStart.getTime()) {
+      currentStage = "FABRICATION";
+      lastUpdate = fabricationStart.toISOString();
+    } else {
+      currentStage = "NOT STARTED";
+      lastUpdate = poDate.toISOString();
+    }
+
+    pumps.push({
+      id: nanoid(),
+      serial,
+      po,
+      customer,
+      model: model.model,
+      stage: currentStage,
+      priority,
+      powder_color: hasColor ? COLORS[Math.floor(Math.random() * COLORS.length)] : undefined,
+      last_update: lastUpdate,
+      value: basePrice,
+      scheduledEnd,
+      // BOM details (for future UI visibility)
+      engine_model: getBomComponent(model.bom.engine, 'engine'),
+      gearbox_model: getBomComponent(model.bom.gearbox, 'gearbox'),
+      control_panel_model: getBomComponent(model.bom.control_panel, 'control_panel'),
+      // Additional metadata
+      description: model.description,
+      total_lead_days: model.lead_times.total_days
+    } as Pump & {
+      engine_model?: string | null;
+      gearbox_model?: string | null;
+      control_panel_model?: string | null;
+      description?: string;
+      total_lead_days?: number;
+    });
+  }
+
   return pumps;
 }
 
+// Main seed function
+export function seed(count: number = 80): Pump[] {
+  // Reset state for deterministic results
+  usedSerials.clear();
+  nextSerial = 1000;
+  poCounter = 1;
+
+  const pumps: Pump[] = [];
+
+  // Create realistic orders based on catalog models
+  let generated = 0;
+
+  // Generate orders for each model
+  for (const model of CATALOG_MODELS) {
+    if (generated >= count) break;
+
+    // Determine order quantity (1-5 pumps per order)
+    const orderQuantity = Math.min(Math.floor(Math.random() * 5) + 1, count - generated);
+    const customer = CUSTOMERS[generated % CUSTOMERS.length];
+    const poBase = genPONumber();
+
+    const modelPumps = generatePumpFromCatalog(
+      model,
+      customer,
+      poBase,
+      orderQuantity,
+      0
+    );
+
+    pumps.push(...modelPumps);
+    generated += orderQuantity;
+  }
+
+  // If we still need more pumps, create additional orders
+  while (generated < count) {
+    const model = CATALOG_MODELS[generated % CATALOG_MODELS.length];
+    const customer = CUSTOMERS[generated % CUSTOMERS.length];
+    const poBase = genPONumber();
+    const remainingQuantity = Math.min(3, count - generated); // Small batches
+
+    const additionalPumps = generatePumpFromCatalog(
+      model,
+      customer,
+      poBase,
+      remainingQuantity,
+      0
+    );
+
+    pumps.push(...additionalPumps);
+    generated += remainingQuantity;
+  }
+
+  // Ensure we have exactly the requested count
+  return pumps.slice(0, count);
+}
+
+// Export catalog data for store integration
+export function getCatalogData() {
+  return catalogData as CatalogData;
+}
+
+// Export lead times lookup
+export function getModelLeadTimes(modelCode: string) {
+  const model = CATALOG_MODELS.find(m => m.model === modelCode);
+  return model ? model.lead_times : undefined;
+}
+
+// Export production stages for UI components
+export function getProductionStages(): Stage[] {
+  return CATALOG_STAGES;
+}

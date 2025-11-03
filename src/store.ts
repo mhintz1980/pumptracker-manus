@@ -4,6 +4,7 @@ import { persist } from "zustand/middleware";
 import { Pump, Filters, AddPoPayload, Stage, DataAdapter } from "./types";
 import { nanoid } from "nanoid";
 import { LocalAdapter } from "./adapters/local";
+import { getModelLeadTimes as getCatalogLeadTimes } from "./lib/seed";
 
 // --- Utils ---
 
@@ -45,6 +46,7 @@ interface AppState {
   pumps: Pump[];
   filters: Filters;
   collapsedStages: Record<Stage, boolean>;
+  collapsedCards: boolean;
   adapter: DataAdapter;
   loading: boolean;
   
@@ -58,6 +60,7 @@ interface AppState {
   updatePump: (id: string, patch: Partial<Pump>) => void;
   replaceDataset: (rows: Pump[]) => void;
   toggleStageCollapse: (stage: Stage) => void;
+  toggleCollapsedCards: () => void;
 
   // selectors
   filtered: () => Pump[];
@@ -73,6 +76,7 @@ export const useApp = create<AppState>()(
         "NOT STARTED": false, FABRICATION: false, "POWDER COAT": false,
         ASSEMBLY: false, TESTING: false, SHIPPING: false, CLOSED: false
       } as Record<Stage, boolean>,
+      collapsedCards: false,
       adapter: LocalAdapter, // Default to LocalAdapter
       loading: true,
       
@@ -140,28 +144,28 @@ export const useApp = create<AppState>()(
           }
         }));
       },
+      toggleCollapsedCards: () => {
+        set((state) => ({
+          collapsedCards: !state.collapsedCards,
+        }));
+      },
 
       filtered: () => applyFilters(get().pumps, get().filters),
 
       getModelLeadTimes: (model: string) => {
-        // This is a mock implementation. In a real scenario, this would come from a database or config file.
-        const leadTimes: Record<string, Record<string, number>> = {
-          "5-3000": { fabrication: 1.5, powder_coat: 0.5, assembly: 1, testing: 0.5 },
-          "7-3000": { fabrication: 2, powder_coat: 0.5, assembly: 1.5, testing: 0.5 },
-          "10-5000": { fabrication: 2.5, powder_coat: 1, assembly: 2, testing: 1 },
-        };
-        return leadTimes[model];
+        // Use real catalog data instead of hardcoded values
+        return getCatalogLeadTimes(model);
       },
     }),
-    { 
-      name: "pumptracker-lite",
+    {
+      name: "pumptracker-lite-v2-catalog",
       // Only persist filters and collapsed stages, not the pumps array itself 
       // since the adapter handles persistence.
       partialize: (state) => ({ 
-        filters: state.filters, 
-        collapsedStages: state.collapsedStages 
+        filters: state.filters,
+        collapsedStages: state.collapsedStages,
+        collapsedCards: state.collapsedCards,
       }),
     }
   )
 );
-
