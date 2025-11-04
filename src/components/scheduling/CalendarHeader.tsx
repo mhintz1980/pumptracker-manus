@@ -1,9 +1,15 @@
 // src/components/scheduling/CalendarHeader.tsx
 import { ChevronLeft, ChevronRight, RefreshCw, Plus, Search, HelpCircle } from 'lucide-react';
+import { useApp } from '../../store';
 import { Button } from '../ui/Button';
 
 
-export function CalendarHeader() {
+interface CalendarHeaderProps {
+  onAutoScheduleClick: () => void;
+}
+
+export function CalendarHeader({ onAutoScheduleClick }: CalendarHeaderProps) {
+  const { clearSchedule, levelSchedule } = useApp();
   return (
     <div className="flex items-center justify-between border-b border-white/10 bg-[hsl(var(--surface-200)_/_0.92)] px-6 py-4 backdrop-blur">
       <div className="flex items-center gap-3">
@@ -20,6 +26,15 @@ export function CalendarHeader() {
         </div>
         <Button variant="outline" size="default" className="rounded-full px-5">
           Today
+        </Button>
+        <Button variant="outline" size="default" className="rounded-full px-5" onClick={levelSchedule}>
+          Level
+        </Button>
+        <Button variant="outline" size="default" className="rounded-full px-5" onClick={onAutoScheduleClick}>
+          Auto-schedule
+        </Button>
+        <Button variant="outline" size="default" className="rounded-full px-5" onClick={clearSchedule}>
+          Clear
         </Button>
       </div>
 

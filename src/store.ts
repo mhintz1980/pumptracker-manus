@@ -49,6 +49,9 @@ interface AppState {
   loading: boolean;
   
   // actions
+  levelSchedule: () => void;
+  autoSchedule: (priority: 'Model' | 'Customer' | 'Purchase Order' | 'Priority' | 'Promise Date' | 'Best Fit') => void;
+  clearSchedule: () => void;
   setAdapter: (a: DataAdapter) => void;
   load: () => Promise<void>;
   setFilters: (f: Partial<Filters>) => void;
@@ -60,8 +63,21 @@ interface AppState {
   toggleStageCollapse: (stage: Stage) => void;
 
   // selectors
+      getWorkingDays: (startDate, days) => {
+        let date = new Date(startDate);
+        let workDays = 0;
+        while (workDays < days) {
+          date.setDate(date.getDate() + 1);
+          // 0 = Sunday, 6 = Saturday
+          if (date.getDay() !== 0 && date.getDay() !== 6) {
+            workDays++;
+          }
+        }
+        return date;
+      },
   filtered: () => Pump[];
   getModelLeadTimes: (model: string) => Record<string, number> | undefined;
+  getWorkingDays: (startDate: Date, days: number) => Date;
 }
 
 export const useApp = create<AppState>()(
@@ -139,6 +155,172 @@ export const useApp = create<AppState>()(
             [stage]: !state.collapsedStages[stage],
           }
         }));
+      },
+
+      clearSchedule: () => {
+        const scheduledPumps = get().pumps.filter(p => p.scheduledStart);
+        const nextPumps = get().pumps.map(p => {
+          if (p.scheduledStart) {
+            return { ...p, scheduledStart: undefined, stage: "NOT STARTED" };
+          }
+          return p;
+        });
+        set({ pumps: nextPumps });
+        get().adapter.upsertMany(scheduledPumps.map(p => ({ ...p, scheduledStart: undefined, stage: "NOT STARTED" })));
+      },
+
+      levelSchedule: () => {
+        const { pumps, getModelLeadTimes, getWorkingDays, adapter } = get();
+        
+        // 1. Identify and sort scheduled jobs by their current scheduledStart date
+        const scheduledPumps = pumps
+          .filter(p => p.scheduledStart)
+          .sort((a, b) => new Date(a.scheduledStart!).getTime() - new Date(b.scheduledStart!).getTime());
+
+        if (scheduledPumps.length === 0) return;
+
+        // 2. Start with the earliest scheduled date or today
+        let currentDate = new Date();
+        // Find the earliest scheduled date among all pumps
+        const earliestScheduledDate = scheduledPumps.reduce((minDate, pump) => {
+          const pumpDate = new Date(pump.scheduledStart!);
+          return pumpDate < minDate ? pumpDate : minDate;
+        }, new Date(scheduledPumps[0].scheduledStart!));
+        
+        // Start leveling from the earliest scheduled date
+        currentDate = earliestScheduledDate;
+
+        const updatedPumps: Pump[] = [];
+        const updatesForAdapter: Partial<Pump>[] = [];
+
+        for (const pump of scheduledPumps) {
+          const leadTimes = getModelLeadTimes(pump.model);
+          const fabricationLeadTime = leadTimes?.fabrication || 1;
+
+          // Find the next available working day for the start date
+          let nextWorkingDay = new Date(currentDate);
+          // 0 = Sunday, 6 = Saturday
+          while (nextWorkingDay.getDay() === 0 || nextWorkingDay.getDay() === 6) {
+            nextWorkingDay.setDate(nextWorkingDay.getDate() + 1);
+          }
+          
+          // 3. Calculate the new scheduled start and end dates
+          const newScheduledStart = nextWorkingDay.toISOString().split('T')[0];
+          
+          // Calculate the new end date (which is the start date for the next job)
+          // getWorkingDays returns the day *after* the last working day
+          const newEndDate = getWorkingDays(nextWorkingDay, fabricationLeadTime);
+          
+          // 4. Update the pump
+          const updatedPump = {
+            ...pump,
+            scheduledStart: newScheduledStart,
+            last_update: new Date().toISOString(),
+          };
+          updatedPumps.push(updatedPump);
+          updatesForAdapter.push({ id: pump.id, scheduledStart: newScheduledStart, last_update: updatedPump.last_update });
+
+          // 5. Set the current date for the next job to the new end date
+          currentDate = newEndDate;
+        }
+
+        // 6. Update the state and adapter
+        const nextPumps = pumps.map(p => {
+          const updated = updatedPumps.find(up => up.id === p.id);
+          return updated || p;
+        });
+        
+        set({ pumps: nextPumps });
+        adapter.upsertMany(updatesForAdapter as Pump[]);
+      },
+
+      autoSchedule: (priority) => {
+        const { pumps, getModelLeadTimes, getWorkingDays, levelSchedule, adapter } = get();
+        
+        // 1. Get unscheduled pumps
+        let unscheduledPumps = pumps.filter(p => !p.scheduledStart);
+
+        // 2. Sort pumps based on priority
+        switch (priority) {
+          case 'Model':
+            unscheduledPumps.sort((a, b) => a.model.localeCompare(b.model));
+            break;
+          case 'Customer':
+            unscheduledPumps.sort((a, b) => a.customer.localeCompare(b.customer));
+            break;
+          case 'Purchase Order':
+            unscheduledPumps.sort((a, b) => a.po.localeCompare(b.po));
+            break;
+          case 'Priority':
+            const priorityOrder = { Urgent: 1, High: 2, Normal: 3, Low: 4 };
+            unscheduledPumps.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+            break;
+          case 'Promise Date':
+            unscheduledPumps.sort((a, b) => {
+              const dateA = a.scheduledEnd ? new Date(a.scheduledEnd).getTime() : Infinity;
+              const dateB = b.scheduledEnd ? new Date(b.scheduledEnd).getTime() : Infinity;
+              return dateA - dateB;
+            });
+            break;
+          case 'Best Fit':
+            // "Best Fit" groups similar pumps together (by model)
+            unscheduledPumps.sort((a, b) => a.model.localeCompare(b.model));
+            break;
+          default:
+            // Default to Priority
+            unscheduledPumps.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+            break;
+        }
+
+        if (unscheduledPumps.length === 0) return;
+
+        // 3. Schedule pumps sequentially
+        let currentDate = new Date();
+        const updatedPumps: Pump[] = [];
+        const updatesForAdapter: Partial<Pump>[] = [];
+
+        for (const pump of unscheduledPumps) {
+          const leadTimes = getModelLeadTimes(pump.model);
+          const fabricationLeadTime = leadTimes?.fabrication || 1;
+
+          // Find the next available working day for the start date
+          let nextWorkingDay = new Date(currentDate);
+          // 0 = Sunday, 6 = Saturday
+          while (nextWorkingDay.getDay() === 0 || nextWorkingDay.getDay() === 6) {
+            nextWorkingDay.setDate(nextWorkingDay.getDate() + 1);
+          }
+          
+          // Calculate the new scheduled start date
+          const newScheduledStart = nextWorkingDay.toISOString().split('T')[0];
+          
+          // Calculate the end date for the next job's start
+          const newEndDate = getWorkingDays(nextWorkingDay, fabricationLeadTime);
+          
+          // Update the pump
+          const updatedPump = {
+            ...pump,
+            stage: "FABRICATION",
+            scheduledStart: newScheduledStart,
+            last_update: new Date().toISOString(),
+          };
+          updatedPumps.push(updatedPump);
+          updatesForAdapter.push({ id: pump.id, stage: "FABRICATION", scheduledStart: newScheduledStart, last_update: updatedPump.last_update });
+
+          // Set the current date for the next job to the new end date
+          currentDate = newEndDate;
+        }
+
+        // 4. Update the state and adapter
+        const nextPumps = pumps.map(p => {
+          const updated = updatedPumps.find(up => up.id === p.id);
+          return updated || p;
+        });
+        
+        set({ pumps: nextPumps });
+        adapter.upsertMany(updatesForAdapter as Pump[]);
+
+        // 5. Level the schedule after auto-scheduling
+        levelSchedule();
       },
 
       filtered: () => applyFilters(get().pumps, get().filters),

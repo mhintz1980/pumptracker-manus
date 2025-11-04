@@ -27,8 +27,8 @@ export function DragAndDropContext({ children }: DragAndDropContextProps) {
       const pumpToMove = pumps.find((p) => p.id === pumpId);
 
       if (pumpToMove) {
-        // Simulate scheduling by moving the pump to the 'FABRICATION' stage
-        updatePump(pumpId, { stage: "FABRICATION", scheduledStart: targetDate });
+        // Schedule the pump and move it to the 'FABRICATION' stage
+        updatePump(pumpId, { stage: "FABRICATION", scheduledStart: targetDate, isScheduled: true });
       }
     }
     setActiveId(null);

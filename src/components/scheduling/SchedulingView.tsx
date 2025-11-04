@@ -6,6 +6,7 @@ import { DragAndDropContext } from "./DragAndDropContext";
 import { CalendarHeader } from "./CalendarHeader";
 import { MainCalendarGrid } from "./MainCalendarGrid";
 import { EventDetailPanel } from "./EventDetailPanel";
+import { AutoScheduleModal } from "./AutoScheduleModal";
 import { useState } from "react";
 
 // Placeholder for event data structure based on MainCalendarGrid.tsx
@@ -33,15 +34,20 @@ export function SchedulingView() {
     console.log('pumps in SchedulingView:', pumps);
   }, [pumps]);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEventData | null>(null);
+  const [isAutoScheduleModalOpen, setIsAutoScheduleModalOpen] = useState(false);
 
   const handleEventClick = (event: CalendarEventData) => {
     setSelectedEvent(event);
   };
 
+  const handleAutoScheduleClick = () => {
+    setIsAutoScheduleModalOpen(true);
+  };
+
   return (
     <DragAndDropContext>
       <div className="flex flex-col h-[calc(100vh-100px)]">
-        <CalendarHeader />
+        <CalendarHeader onAutoScheduleClick={handleAutoScheduleClick} />
         <div className="flex flex-1 overflow-hidden">
           <SchedulingSidebar />
           <MainCalendarGrid onEventClick={handleEventClick} />
@@ -50,6 +56,10 @@ export function SchedulingView() {
           )}
         </div>
       </div>
+      <AutoScheduleModal
+        isOpen={isAutoScheduleModalOpen}
+        onClose={() => setIsAutoScheduleModalOpen(false)}
+      />
     </DragAndDropContext>
   );
 }
