@@ -1,37 +1,44 @@
 // src/components/scheduling/SchedulingSidebar.tsx
+import { Maximize2, Minimize2 } from "lucide-react";
+import { Button } from "../ui/Button";
 import { useApp } from "../../store";
 import { UnscheduledJobCard } from "./UnscheduledJobCard";
-import { Card, CardHeader, CardTitle, CardContent } from "../ui/Card";
-import { ScrollArea } from "../ui/ScrollArea";
-
 
 export function SchedulingSidebar() {
-  const { pumps } = useApp();
+  const pumps = useApp((state) => state.pumps);
+  const collapsedCards = useApp((state) => state.collapsedCards);
+  const toggleCollapsedCards = useApp((state) => state.toggleCollapsedCards);
+
   const unscheduledPumps = pumps.filter(
-    (p) => p.stage === "NOT STARTED" || p.stage === "FABRICATION"
-  ); // Assuming NOT STARTED and FABRICATION are unscheduled/backlog
+    (pump) => pump.stage === "NOT STARTED" || pump.stage === "FABRICATION"
+  );
 
   return (
-    <div className="w-[300px] border-r border-white/10 bg-[hsl(var(--surface-100)_/_0.7)] backdrop-blur flex flex-col h-full p-4">
-      <Card className="flex h-full flex-col">
-        <CardHeader className="border-b border-white/10 py-4">
-          <CardTitle className="flex items-center justify-between text-base text-white">
-            Unscheduled Jobs
-            <span className="text-sm font-normal text-foreground/60">
-              {unscheduledPumps.length}
-            </span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="flex-1 overflow-hidden p-3">
-          <ScrollArea className="h-full pr-3">
-            <div className="space-y-3">
-              {unscheduledPumps.map((pump) => (
-                <UnscheduledJobCard key={pump.id} pump={pump} />
-              ))}
+    <aside className="flex h-full w-[280px] flex-col border-r border-border bg-card">
+      <header className="flex items-center justify-between border-b border-border px-4 py-3">
+        <h3 className="text-sm font-semibold text-foreground">Unscheduled Jobs</h3>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={toggleCollapsedCards}
+        >
+          {collapsedCards ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
+        </Button>
+      </header>
+
+      <div className="flex-1 overflow-hidden px-3 py-4">
+        <div className="flex flex-col gap-3 overflow-y-auto pr-2">
+          {unscheduledPumps.map((pump) => (
+            <UnscheduledJobCard key={pump.id} pump={pump} collapsed={collapsedCards} />
+          ))}
+          {unscheduledPumps.length === 0 && (
+            <div className="rounded-lg border border-dashed border-border px-3 py-6 text-center text-xs text-muted-foreground">
+              All jobs are scheduled
             </div>
-          </ScrollArea>
-        </CardContent>
-      </Card>
-    </div>
+          )}
+        </div>
+      </div>
+    </aside>
   );
 }

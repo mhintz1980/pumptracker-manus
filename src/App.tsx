@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useApp } from "./store";
 import { AddPoModal } from "./components/toolbar/AddPoModal";
 import { Dashboard } from "./pages/Dashboard";
-import { KanbanBoard } from "./components/kanban/KanbanBoard";
+import { Kanban } from "./pages/Kanban";
 import { SchedulingView } from "./components/scheduling/SchedulingView";
 import { Toaster } from "sonner";
 import { Pump } from "./types";
@@ -36,7 +36,7 @@ function App() {
           {currentView === "dashboard" ? (
             <Dashboard pumps={filteredPumps} onSelectPump={setSelectedPump} />
           ) : currentView === "kanban" ? (
-            <KanbanBoard pumps={filteredPumps} onCardClick={setSelectedPump} />
+            <Kanban pumps={filteredPumps} onSelectPump={setSelectedPump} />
           ) : loading ? (
             <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
               Loading...

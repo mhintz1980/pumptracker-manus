@@ -9,7 +9,9 @@ interface DragAndDropContextProps {
 }
 
 export function DragAndDropContext({ children }: DragAndDropContextProps) {
-  const { pumps, updatePump } = useApp();
+  const pumps = useApp((state) => state.pumps);
+  const updatePump = useApp((state) => state.updatePump);
+  const collapsedCards = useApp((state) => state.collapsedCards);
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
 
   const handleDragStart = (event: { active: { id: UniqueIdentifier } }) => {
@@ -43,7 +45,7 @@ export function DragAndDropContext({ children }: DragAndDropContextProps) {
     return (
       <DragOverlay>
         <div className="w-[268px] opacity-70">
-          <UnscheduledJobCard pump={activePump} />
+          <UnscheduledJobCard pump={activePump} collapsed={collapsedCards} />
         </div>
       </DragOverlay>
     );
@@ -56,4 +58,3 @@ export function DragAndDropContext({ children }: DragAndDropContextProps) {
     </DndContext>
   );
 }
-

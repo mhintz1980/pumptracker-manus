@@ -22,22 +22,22 @@ const NAV_ITEMS: Array<{
 export function Header({ currentView, onChangeView }: HeaderProps) {
   return (
     <header className="bg-primary text-primary-foreground border-b border-primary/20 sticky top-0 z-50 shadow-layer-md">
-      <div className="container mx-auto flex h-16 items-center justify-between px-6">
-        <div className="flex items-center gap-3">
-          <div className="rounded-2xl bg-white/20 p-2 shadow-layer-sm">
-            <Package className="h-6 w-6" strokeWidth={2.5} />
+      <div className="container mx-auto flex h-14 items-center justify-between px-4">
+        <div className="flex items-center gap-2">
+          <div className="rounded-2xl bg-white/20 p-1.5 shadow-layer-sm">
+            <Package className="h-5 w-5" strokeWidth={2.5} />
           </div>
           <div>
-            <h1 className="text-xl font-semibold tracking-tight">
+            <h1 className="text-lg font-semibold tracking-tight">
               PumpTracker <span className="font-normal opacity-80">Lite</span>
             </h1>
-            <p className="text-xs uppercase tracking-[0.25em] text-white/80">
+            <p className="text-[10px] uppercase tracking-[0.22em] text-white/80">
               Production Management
             </p>
           </div>
         </div>
 
-        <nav className="flex items-center gap-2">
+        <nav className="flex items-center gap-1.5">
           {NAV_ITEMS.map(({ id, label, icon: Icon }) => (
             <Button
               key={id}
@@ -45,7 +45,7 @@ export function Header({ currentView, onChangeView }: HeaderProps) {
               size="sm"
               onClick={() => onChangeView(id)}
               className={cn(
-                "h-9 rounded-full px-4 text-xs font-semibold transition-all shadow-sm hover:-translate-y-[1px] hover:bg-white/15 hover:shadow-md",
+                "h-8 rounded-full px-3 text-[11px] font-semibold transition-all shadow-sm hover:-translate-y-[1px] hover:bg-white/15 hover:shadow-md",
                 currentView === id
                   ? "bg-white/20 text-white shadow-md"
                   : "text-white/80"

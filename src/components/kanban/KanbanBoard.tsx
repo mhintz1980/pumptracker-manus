@@ -1,22 +1,39 @@
 // src/components/kanban/KanbanBoard.tsx
-import React from "react";
+import { useState, useMemo } from "react";
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
 import { Pump, Stage } from "../../types";
 import { StageColumn } from "./StageColumn";
-import { DndContext, DragEndEvent, DragStartEvent, DragOverlay, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
+import { PumpCard } from "./PumpCard";
 import { useApp } from "../../store";
 import { toast } from "sonner";
-import { PumpCard } from "./PumpCard";
+
+const STAGES: Stage[] = [
+  "NOT STARTED",
+  "FABRICATION",
+  "POWDER COAT",
+  "ASSEMBLY",
+  "TESTING",
+  "SHIPPING",
+  "CLOSED",
+];
 
 interface KanbanBoardProps {
   pumps: Pump[];
+  collapsed: boolean;
   onCardClick?: (pump: Pump) => void;
 }
 
-const STAGES: Stage[] = ["NOT STARTED", "FABRICATION", "POWDER COAT", "ASSEMBLY", "TESTING", "SHIPPING", "CLOSED"];
-
-export function KanbanBoard({ pumps, onCardClick }: KanbanBoardProps) {
-  const { moveStage } = useApp();
-  const [activePump, setActivePump] = React.useState<Pump | null>(null);
+export function KanbanBoard({ pumps, collapsed, onCardClick }: KanbanBoardProps) {
+  const moveStage = useApp((state) => state.moveStage);
+  const [activePump, setActivePump] = useState<Pump | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -26,63 +43,58 @@ export function KanbanBoard({ pumps, onCardClick }: KanbanBoardProps) {
     })
   );
 
-  const pumpsByStage = React.useMemo(() => {
+  const pumpsByStage = useMemo(() => {
     return STAGES.reduce((acc, stage) => {
-      acc[stage] = pumps.filter(p => p.stage === stage);
+      acc[stage] = pumps.filter((pump) => pump.stage === stage);
       return acc;
     }, {} as Record<Stage, Pump[]>);
   }, [pumps]);
 
   const handleDragStart = (event: DragStartEvent) => {
-    const pump = pumps.find(p => p.id === event.active.id);
-    setActivePump(pump || null);
+    const pump = pumps.find((p) => p.id === event.active.id);
+    setActivePump(pump ?? null);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     setActivePump(null);
-    
+
     const { active, over } = event;
     if (!over) return;
 
     const pumpId = active.id as string;
-    const newStage = over.id as Stage;
+    const nextStage = (over.data?.current?.stage as Stage) ?? (over.id as Stage);
+    const pump = pumps.find((p) => p.id === pumpId);
 
-    const pump = pumps.find(p => p.id === pumpId);
-    if (!pump) return;
-
-    if (pump.stage !== newStage) {
-      moveStage(pumpId, newStage);
-      toast.success(`Moved ${pump.model} (${pump.serial}) to ${newStage}`);
+    if (pump && pump.stage !== nextStage) {
+      moveStage(pumpId, nextStage);
+      toast.success(`Moved ${pump.model} (Serial #${pump.serial}) to ${nextStage}`);
     }
   };
 
   return (
-    <div className="mb-6">
-      <h2 className="text-2xl font-semibold mb-4">Kanban Board</h2>
-      <DndContext
-        sensors={sensors}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-      >
-        <div className="flex gap-4 overflow-x-auto pb-4">
-          {STAGES.map((stage) => (
-            <StageColumn
-              key={stage}
-              stage={stage}
-              pumps={pumpsByStage[stage]}
-              onCardClick={onCardClick}
-            />
-          ))}
-        </div>
-        <DragOverlay>
-          {activePump ? (
-            <div className="opacity-80">
-              <PumpCard pump={activePump} />
-            </div>
-          ) : null}
-        </DragOverlay>
-      </DndContext>
-    </div>
+    <DndContext
+      sensors={sensors}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
+      <div className="flex h-full gap-4 overflow-x-auto pb-4">
+        {STAGES.map((stage) => (
+          <StageColumn
+            key={stage}
+            stage={stage}
+            pumps={pumpsByStage[stage]}
+            collapsed={collapsed}
+            onCardClick={onCardClick}
+            activeId={activePump?.id}
+          />
+        ))}
+      </div>
+
+      <DragOverlay>
+        {activePump ? (
+          <PumpCard pump={activePump} collapsed={collapsed} isDragging />
+        ) : null}
+      </DragOverlay>
+    </DndContext>
   );
 }
-

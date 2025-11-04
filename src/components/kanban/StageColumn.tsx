@@ -2,50 +2,62 @@
 import { Pump, Stage } from "../../types";
 import { PumpCard } from "./PumpCard";
 import { useDroppable } from "@dnd-kit/core";
-import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useApp } from "../../store";
+import { cn } from "../../lib/utils";
 
 interface StageColumnProps {
   stage: Stage;
   pumps: Pump[];
+  collapsed: boolean;
   onCardClick?: (pump: Pump) => void;
+  activeId?: string | null;
 }
 
-export function StageColumn({ stage, pumps, onCardClick }: StageColumnProps) {
+export function StageColumn({ stage, pumps, collapsed, onCardClick, activeId }: StageColumnProps) {
   const { collapsedStages, toggleStageCollapse } = useApp();
   const isCollapsed = collapsedStages[stage];
   
-  const { setNodeRef } = useDroppable({
+  const { setNodeRef, isOver } = useDroppable({
     id: stage,
+    data: { type: "column", stage },
   });
 
   const stageAccent: Record<Stage, string> = {
     "NOT STARTED": "bg-slate-400",
-    "FABRICATION": "bg-blue-400",
-    "POWDER COAT": "bg-purple-400",
-    "ASSEMBLY": "bg-amber-400",
-    "TESTING": "bg-orange-400",
-    "SHIPPING": "bg-emerald-400",
-    "CLOSED": "bg-cyan-400",
+    "FABRICATION": "bg-blue-500",
+    "POWDER COAT": "bg-purple-500",
+    "ASSEMBLY": "bg-amber-500",
+    "TESTING": "bg-orange-500",
+    "SHIPPING": "bg-emerald-500",
+    "CLOSED": "bg-cyan-500",
   };
 
   return (
-    <div className="flex flex-col min-w-[280px] max-w-[320px]">
-      <div className="surface-elevated border border-white/8 rounded-3xl shadow-frame overflow-hidden">
+    <div className="flex min-w-[260px] max-w-[300px] flex-col">
+      <div
+        className={cn(
+          "layer-l2 overflow-hidden transition-shadow",
+          isOver && "ring-2 ring-accent/40"
+        )}
+      >
         <button
           type="button"
-          className="flex w-full items-center justify-between gap-3 border-b border-white/8 bg-white/5 px-4 py-3 text-left transition-colors hover:bg-white/10"
+          className="flex w-full items-center justify-between gap-2 border-b border-border/60 bg-card/60 px-3 py-2.5 text-left transition-colors hover:bg-card"
           onClick={() => toggleStageCollapse(stage)}
         >
-          <div>
-            <div className="flex items-center gap-2">
-              <span className={`h-2.5 w-2.5 rounded-full ${stageAccent[stage]}`}></span>
-              <h3 className="text-sm font-semibold tracking-wide text-white">{stage}</h3>
+          <div className="flex flex-1 items-center gap-2">
+            <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${stageAccent[stage]}`}></span>
+            <div className="flex flex-1 items-center justify-between text-sm font-semibold text-foreground">
+              <span className="truncate" title={stage}>
+                {stage}
+              </span>
+              <span className="text-xs font-medium text-muted-foreground">
+                {pumps.length}
+              </span>
             </div>
-            <div className="text-xs text-foreground/70 mt-1">{pumps.length} items</div>
           </div>
-          <span className="text-foreground/60 hover:text-white">
+          <span className="text-muted-foreground hover:text-foreground">
             {isCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
           </span>
         </button>
@@ -53,13 +65,23 @@ export function StageColumn({ stage, pumps, onCardClick }: StageColumnProps) {
         {!isCollapsed && (
           <div
             ref={setNodeRef}
-            className="surface-panel px-3 py-4 max-h-[calc(100vh-320px)] overflow-y-auto space-y-3"
+            className="flex-1 space-y-3 overflow-y-auto overflow-x-hidden px-2.5 py-3 max-h-[calc(100vh-320px)] scrollbar-dark"
           >
-            <SortableContext items={pumps.map(p => p.id)} strategy={verticalListSortingStrategy}>
-              {pumps.map((pump) => (
-                <PumpCard key={pump.id} pump={pump} onClick={() => onCardClick?.(pump)} />
-              ))}
-            </SortableContext>
+            {pumps.map((pump) => (
+              activeId === pump.id ? null : (
+                <PumpCard
+                  key={pump.id}
+                  pump={pump}
+                  collapsed={collapsed}
+                  onClick={() => onCardClick?.(pump)}
+                />
+              )
+            ))}
+            {pumps.length === 0 && (
+              <div className="flex h-24 items-center justify-center rounded-lg border border-dashed border-border text-xs text-muted-foreground">
+                Drop pumps here
+              </div>
+            )}
           </div>
         )}
       </div>

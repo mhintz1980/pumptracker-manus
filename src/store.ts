@@ -91,7 +91,7 @@ export const useApp = create<AppState>()(
       setFilters: (f) => set({ filters: { ...get().filters, ...f } }),
       clearFilters: () => set({ filters: {} }),
 
-      addPO: ({ po, customer, lines }) => {
+      addPO: ({ po, customer, lines, dateReceived, promiseDate }) => {
         const expanded: Pump[] = lines.flatMap((line) =>
           Array.from({ length: line.quantity || 1 }).map(() => ({
             id: nanoid(),
@@ -100,14 +100,14 @@ export const useApp = create<AppState>()(
             customer,
             model: line.model,
             stage: "NOT STARTED",
-            priority: "Normal", // Default priority
+            priority: line.priority ?? "Normal",
             powder_color: line.color,
-            last_update: new Date().toISOString(),
+            last_update: dateReceived || new Date().toISOString(),
             value: line.valueEach ?? 0,
-            scheduledEnd: line.promiseDate,
+            scheduledEnd: line.promiseDate || promiseDate,
           }))
         );
-        
+
         const next = [...get().pumps, ...expanded];
         set({ pumps: next });
         get().adapter.upsertMany(expanded);

@@ -34,11 +34,14 @@ export interface PoLine {
   color?: string;
   promiseDate?: string; // ISO
   valueEach?: number;
+  priority?: Priority;
 }
 
 export interface AddPoPayload {
   po: string;
   customer: string;
+  dateReceived?: string;
+  promiseDate?: string;
   lines: PoLine[]; // expands to multiple Pump entries
 }
 
@@ -59,4 +62,3 @@ export type DataAdapter = {
   upsertMany: (rows: Pump[]) => Promise<void>;
   update: (id: string, patch: Partial<Pump>) => Promise<void>;
 };
-
