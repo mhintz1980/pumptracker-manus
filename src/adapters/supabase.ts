@@ -27,14 +27,16 @@ export const SupabaseAdapter: DataAdapter = {
       attempts++;
       console.error(`Supabase load error (attempt ${attempts}):`, error);
 
-      if (attempts < maxAttempts) {
-        const delay = backoffIntervals[attempts - 1];
-        console.log(`Retrying in ${delay}ms...`);
-        await new Promise(res => setTimeout(res, delay));
-      } else {
+      const delayIndex = Math.min(attempts - 1, backoffIntervals.length - 1);
+      const delay = backoffIntervals[delayIndex];
+      console.log(`Retrying in ${delay}ms...`);
+
+      if (attempts >= maxAttempts) {
         console.error("Failed to load from Supabase after multiple attempts.");
         throw error;
       }
+
+      await new Promise(res => setTimeout(res, delay));
     }
 
     // This part should not be reachable, but as a fallback:
@@ -73,4 +75,3 @@ export const SupabaseAdapter: DataAdapter = {
     }
   },
 };
-

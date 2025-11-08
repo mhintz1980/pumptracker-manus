@@ -77,7 +77,7 @@ export function KanbanBoard({ pumps, collapsed, onCardClick }: KanbanBoardProps)
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex h-full gap-4 overflow-x-auto pb-4">
+      <div className="flex h-full gap-4 overflow-x-auto pb-4 scrollbar-dark">
         {STAGES.map((stage) => (
           <StageColumn
             key={stage}

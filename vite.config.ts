@@ -10,4 +10,10 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  test: {
+    environment: "jsdom",
+    pool: "threads",
+    include: ["src/**/*.{test,spec}.{ts,tsx}", "tests/**/*.spec.ts"],
+    exclude: ["tests/e2e/**", "tests/e2e*.spec.ts"],
+  },
 })
