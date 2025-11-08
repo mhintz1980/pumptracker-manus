@@ -5,6 +5,7 @@ import { useDroppable } from "@dnd-kit/core";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useApp } from "../../store";
 import { cn } from "../../lib/utils";
+import { useMemo } from "react";
 
 interface StageColumnProps {
   stage: Stage;
@@ -15,8 +16,22 @@ interface StageColumnProps {
 }
 
 export function StageColumn({ stage, pumps, collapsed, onCardClick, activeId }: StageColumnProps) {
-  const { collapsedStages, toggleStageCollapse } = useApp();
+  const { collapsedStages, toggleStageCollapse, wipLimits } = useApp();
   const isCollapsed = collapsedStages[stage];
+  const wipLimit = wipLimits?.[stage] ?? null;
+  const isOverLimit = typeof wipLimit === "number" ? pumps.length > wipLimit : false;
+  const countLabel = wipLimit != null ? `${pumps.length} / ${wipLimit}` : `${pumps.length}`;
+
+  const averageDwell = useMemo(() => {
+    if (!pumps.length) return null;
+    const now = Date.now();
+    const samples = pumps
+      .map((pump) => pump.last_update ? Math.max(0, (now - new Date(pump.last_update).getTime()) / (1000 * 60 * 60 * 24)) : null)
+      .filter((value): value is number => value !== null);
+    if (!samples.length) return null;
+    const avg = samples.reduce((sum, value) => sum + value, 0) / samples.length;
+    return `${avg.toFixed(1)}d`;
+  }, [pumps]);
   
   const { setNodeRef, isOver } = useDroppable({
     id: stage,
@@ -43,7 +58,12 @@ export function StageColumn({ stage, pumps, collapsed, onCardClick, activeId }: 
       >
         <button
           type="button"
-          className="flex w-full items-center justify-between gap-2 border-b border-border/60 bg-card/60 px-3 py-2.5 text-left transition-colors hover:bg-card"
+          data-stage-header={stage}
+          data-over-limit={isOverLimit || undefined}
+          className={cn(
+            "flex w-full items-center justify-between gap-2 border-b border-border/60 bg-card/60 px-3 py-2.5 text-left transition-colors",
+            isOverLimit ? "bg-destructive/15 hover:bg-destructive/20 border-destructive/40" : "hover:bg-card"
+          )}
           onClick={() => toggleStageCollapse(stage)}
         >
           <div className="flex flex-1 items-center gap-2">
@@ -52,9 +72,12 @@ export function StageColumn({ stage, pumps, collapsed, onCardClick, activeId }: 
               <span className="truncate" title={stage}>
                 {stage}
               </span>
-              <span className="text-xs font-medium text-muted-foreground">
-                {pumps.length}
-              </span>
+              <div className="flex flex-col items-end text-xs font-medium text-muted-foreground">
+                <span>{countLabel}</span>
+                <span className="text-[11px] uppercase tracking-wide">
+                  Avg {averageDwell ?? "–"}
+                </span>
+              </div>
             </div>
           </div>
           <span className="text-muted-foreground hover:text-foreground">

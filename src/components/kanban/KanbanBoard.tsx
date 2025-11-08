@@ -33,6 +33,7 @@ interface KanbanBoardProps {
 
 export function KanbanBoard({ pumps, collapsed, onCardClick }: KanbanBoardProps) {
   const moveStage = useApp((state) => state.moveStage);
+  const wipLimits = useApp((state) => state.wipLimits);
   const [activePump, setActivePump] = useState<Pump | null>(null);
 
   const sensors = useSensors(
@@ -49,6 +50,19 @@ export function KanbanBoard({ pumps, collapsed, onCardClick }: KanbanBoardProps)
       return acc;
     }, {} as Record<Stage, Pump[]>);
   }, [pumps]);
+
+  const orderedStages = useMemo(() => {
+    const meta = STAGES.map((stage) => {
+      const limit = wipLimits?.[stage];
+      const stagePumps = pumpsByStage[stage];
+      const isOverLimit = typeof limit === "number" ? stagePumps.length > limit : false;
+      return { stage, pumps: stagePumps, isOverLimit };
+    });
+
+    const overloaded = meta.filter((item) => item.isOverLimit);
+    const normal = meta.filter((item) => !item.isOverLimit);
+    return [...overloaded, ...normal];
+  }, [pumpsByStage, wipLimits]);
 
   const handleDragStart = (event: DragStartEvent) => {
     const pump = pumps.find((p) => p.id === event.active.id);
@@ -78,11 +92,11 @@ export function KanbanBoard({ pumps, collapsed, onCardClick }: KanbanBoardProps)
       onDragEnd={handleDragEnd}
     >
       <div className="flex h-full gap-4 overflow-x-auto pb-4 scrollbar-dark">
-        {STAGES.map((stage) => (
+        {orderedStages.map(({ stage, pumps: stagePumps }) => (
           <StageColumn
             key={stage}
             stage={stage}
-            pumps={pumpsByStage[stage]}
+            pumps={stagePumps}
             collapsed={collapsed}
             onCardClick={onCardClick}
             activeId={activePump?.id}

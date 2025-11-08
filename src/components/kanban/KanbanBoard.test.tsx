@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { render } from "@testing-library/react";
 import type { Pump } from "../../types";
 import type { ReactNode } from "react";
+import { useApp } from "../../store";
 
 vi.mock("@dnd-kit/core", () => ({
   DndContext: ({ children }: { children: ReactNode }) => <div data-testid="dnd-context">{children}</div>,
@@ -45,5 +46,41 @@ describe("KanbanBoard", () => {
 
     expect(scrollArea).not.toBeNull();
     expect(scrollArea?.className).toContain("scrollbar-dark");
+  });
+
+  it("bubbles overloaded stages to the front", () => {
+    useApp.setState((state) => ({
+      wipLimits: {
+        ...state.wipLimits,
+        FABRICATION: 1,
+        ASSEMBLY: 5,
+      },
+    }));
+
+    const pumps: Pump[] = [
+      {
+        ...samplePumps[0],
+        id: "fab-1",
+        stage: "FABRICATION",
+      },
+      {
+        ...samplePumps[0],
+        id: "fab-2",
+        stage: "FABRICATION",
+      },
+      {
+        ...samplePumps[0],
+        id: "assembly-1",
+        stage: "ASSEMBLY",
+      },
+    ];
+
+    const { container } = render(
+      <KanbanBoard pumps={pumps} collapsed={false} />
+    );
+
+    const headers = container.querySelectorAll("[data-stage-header]");
+    expect(headers.length).toBeGreaterThan(0);
+    expect(headers[0].getAttribute("data-stage-header")).toBe("FABRICATION");
   });
 });

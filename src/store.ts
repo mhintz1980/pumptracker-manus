@@ -47,6 +47,7 @@ interface AppState {
   filters: Filters;
   collapsedStages: Record<Stage, boolean>;
   collapsedCards: boolean;
+  wipLimits: Record<Stage, number | null>;
   adapter: DataAdapter;
   loading: boolean;
   
@@ -61,6 +62,7 @@ interface AppState {
   replaceDataset: (rows: Pump[]) => void;
   toggleStageCollapse: (stage: Stage) => void;
   toggleCollapsedCards: () => void;
+  setWipLimit: (stage: Stage, limit: number | null) => void;
 
   // selectors
   filtered: () => Pump[];
@@ -77,6 +79,15 @@ export const useApp = create<AppState>()(
         ASSEMBLY: false, TESTING: false, SHIPPING: false, CLOSED: false
       } as Record<Stage, boolean>,
       collapsedCards: false,
+      wipLimits: {
+        "NOT STARTED": 12,
+        FABRICATION: 8,
+        "POWDER COAT": 6,
+        ASSEMBLY: 8,
+        TESTING: 5,
+        SHIPPING: 4,
+        CLOSED: null,
+      },
       adapter: LocalAdapter, // Default to LocalAdapter
       loading: true,
       
@@ -149,6 +160,14 @@ export const useApp = create<AppState>()(
           collapsedCards: !state.collapsedCards,
         }));
       },
+      setWipLimit: (stage, limit) => {
+        set((state) => ({
+          wipLimits: {
+            ...state.wipLimits,
+            [stage]: limit,
+          }
+        }));
+      },
 
       filtered: () => applyFilters(get().pumps, get().filters),
 
@@ -161,10 +180,11 @@ export const useApp = create<AppState>()(
       name: "pumptracker-lite-v2-catalog",
       // Only persist filters and collapsed stages, not the pumps array itself 
       // since the adapter handles persistence.
-      partialize: (state) => ({ 
+      partialize: (state) => ({
         filters: state.filters,
         collapsedStages: state.collapsedStages,
         collapsedCards: state.collapsedCards,
+        wipLimits: state.wipLimits,
       }),
     }
   )
