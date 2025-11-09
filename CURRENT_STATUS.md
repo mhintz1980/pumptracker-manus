@@ -146,6 +146,23 @@ This will show you:
 4. **Calendar events** show current stage with color coding
 5. **Empty state** shows "All pumps scheduled—nice!" message
 
+## 🧠 **Kanban Workflow Enhancements** (2025-01-13)
+
+### **Card Sorting Controls**
+- New inline "Sort by" selector near the collapse toggle
+- Options: Priority, Model, Customer, PO, Last Update
+- Sorting is applied per column without changing overall stage order
+
+### **Live WIP Limit Editing**
+- Added "Edit WIP limits" panel with inputs for every stage
+- Limits are persisted in Zustand/localStorage (no repo edits needed)
+- Stage headers display `count / limit`; when over limit they glow with a subtle border highlight
+
+### **Flow Health Signals**
+- Average dwell time (in days) displayed for production stages (FABRICATION → SHIPPING)
+- Limits fall back to defaults if no local overrides exist
+- Card ordering defaults to priority-first to keep urgent work visible
+
 ## 🎉 **Ready for Review**
 
 The pumptracker app is now running with real catalog data instead of mock data. All the changes you requested have been implemented and are visible in the browser at http://localhost:5173/.

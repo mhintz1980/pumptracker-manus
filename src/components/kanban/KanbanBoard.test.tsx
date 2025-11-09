@@ -20,7 +20,7 @@ vi.mock("@dnd-kit/core", () => ({
   PointerSensor: vi.fn(),
 }));
 
-import { KanbanBoard } from "./KanbanBoard";
+import { KanbanBoard, sortStagePumps } from "./KanbanBoard";
 
 const samplePumps: Pump[] = [
   {
@@ -48,39 +48,15 @@ describe("KanbanBoard", () => {
     expect(scrollArea?.className).toContain("scrollbar-dark");
   });
 
-  it("bubbles overloaded stages to the front", () => {
-    useApp.setState((state) => ({
-      wipLimits: {
-        ...state.wipLimits,
-        FABRICATION: 1,
-        ASSEMBLY: 5,
-      },
-    }));
-
+  it("sorts pumps by priority when requested", () => {
     const pumps: Pump[] = [
-      {
-        ...samplePumps[0],
-        id: "fab-1",
-        stage: "FABRICATION",
-      },
-      {
-        ...samplePumps[0],
-        id: "fab-2",
-        stage: "FABRICATION",
-      },
-      {
-        ...samplePumps[0],
-        id: "assembly-1",
-        stage: "ASSEMBLY",
-      },
+      { ...samplePumps[0], id: "low", priority: "Low", stage: "FABRICATION" },
+      { ...samplePumps[0], id: "urgent", priority: "Urgent", stage: "FABRICATION" },
+      { ...samplePumps[0], id: "normal", priority: "Normal", stage: "FABRICATION" },
     ];
 
-    const { container } = render(
-      <KanbanBoard pumps={pumps} collapsed={false} />
-    );
+    const sorted = sortStagePumps(pumps, "priority");
 
-    const headers = container.querySelectorAll("[data-stage-header]");
-    expect(headers.length).toBeGreaterThan(0);
-    expect(headers[0].getAttribute("data-stage-header")).toBe("FABRICATION");
+    expect(sorted.map((pump) => pump.id)).toEqual(["urgent", "normal", "low"]);
   });
 });

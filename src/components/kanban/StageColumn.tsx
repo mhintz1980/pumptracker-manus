@@ -3,7 +3,7 @@ import { Pump, Stage } from "../../types";
 import { PumpCard } from "./PumpCard";
 import { useDroppable } from "@dnd-kit/core";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { useApp } from "../../store";
+import { useApp, DEFAULT_WIP_LIMITS } from "../../store";
 import { cn } from "../../lib/utils";
 import { useMemo } from "react";
 
@@ -18,20 +18,37 @@ interface StageColumnProps {
 export function StageColumn({ stage, pumps, collapsed, onCardClick, activeId }: StageColumnProps) {
   const { collapsedStages, toggleStageCollapse, wipLimits } = useApp();
   const isCollapsed = collapsedStages[stage];
-  const wipLimit = wipLimits?.[stage] ?? null;
+  const effectiveLimits = wipLimits ?? DEFAULT_WIP_LIMITS;
+  const wipLimit = effectiveLimits[stage] ?? DEFAULT_WIP_LIMITS[stage] ?? null;
   const isOverLimit = typeof wipLimit === "number" ? pumps.length > wipLimit : false;
   const countLabel = wipLimit != null ? `${pumps.length} / ${wipLimit}` : `${pumps.length}`;
 
+  const productionStages: Stage[] = [
+    "FABRICATION",
+    "POWDER COAT",
+    "ASSEMBLY",
+    "TESTING",
+    "SHIPPING",
+  ];
+  const isProductionStage = productionStages.includes(stage);
+
   const averageDwell = useMemo(() => {
-    if (!pumps.length) return null;
+    if (!isProductionStage || !pumps.length) return null;
     const now = Date.now();
+    const dayMs = 1000 * 60 * 60 * 24;
     const samples = pumps
-      .map((pump) => pump.last_update ? Math.max(0, (now - new Date(pump.last_update).getTime()) / (1000 * 60 * 60 * 24)) : null)
+      .map((pump) => {
+        const ts = pump.last_update ?? pump.scheduledStart ?? pump.scheduledEnd ?? pump.promiseDate;
+        if (!ts) return null;
+        const value = new Date(ts).getTime();
+        if (Number.isNaN(value)) return null;
+        return Math.max(0, (now - value) / dayMs);
+      })
       .filter((value): value is number => value !== null);
     if (!samples.length) return null;
     const avg = samples.reduce((sum, value) => sum + value, 0) / samples.length;
     return `${avg.toFixed(1)}d`;
-  }, [pumps]);
+  }, [pumps, isProductionStage]);
   
   const { setNodeRef, isOver } = useDroppable({
     id: stage,
@@ -62,7 +79,9 @@ export function StageColumn({ stage, pumps, collapsed, onCardClick, activeId }: 
           data-over-limit={isOverLimit || undefined}
           className={cn(
             "flex w-full items-center justify-between gap-2 border-b border-border/60 bg-card/60 px-3 py-2.5 text-left transition-colors",
-            isOverLimit ? "bg-destructive/15 hover:bg-destructive/20 border-destructive/40" : "hover:bg-card"
+            isOverLimit
+              ? "border-red-400/50 shadow-[0_0_12px_rgba(248,113,113,0.45)] bg-card/80"
+              : "hover:bg-card"
           )}
           onClick={() => toggleStageCollapse(stage)}
         >
@@ -75,7 +94,7 @@ export function StageColumn({ stage, pumps, collapsed, onCardClick, activeId }: 
               <div className="flex flex-col items-end text-xs font-medium text-muted-foreground">
                 <span>{countLabel}</span>
                 <span className="text-[11px] uppercase tracking-wide">
-                  Avg {averageDwell ?? "–"}
+                  Avg {averageDwell ?? "--"}
                 </span>
               </div>
             </div>
