@@ -4,6 +4,9 @@ import { useState } from "react";
 import { useApp } from "../../store";
 import { UnscheduledJobCard } from "./UnscheduledJobCard";
 import { Pump } from "../../types";
+import { deriveScheduleWindow, isValidScheduleDate } from "../../lib/schedule";
+import { toast } from "sonner";
+import { startOfDay } from "date-fns";
 
 interface DragAndDropContextProps {
   children: React.ReactNode;
@@ -11,7 +14,7 @@ interface DragAndDropContextProps {
 
 export function DragAndDropContext({ children }: DragAndDropContextProps) {
   const pumps = useApp((state) => state.pumps);
-  const updatePump = useApp((state) => state.updatePump);
+  const schedulePump = useApp((state) => state.schedulePump);
   const collapsedCards = useApp((state) => state.collapsedCards);
   const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -45,9 +48,28 @@ export function DragAndDropContext({ children }: DragAndDropContextProps) {
     const pump = getPumpFromActive(active);
     const targetDate = over.id?.toString();
 
-    if (pump && targetDate) {
-      updatePump(pump.id, { stage: "FABRICATION", scheduledStart: targetDate });
+    if (!pump || !targetDate) {
+      setActiveId(null);
+      return;
     }
+
+    // Guard against scheduling pumps already beyond NOT STARTED
+    if (pump.stage !== "UNSCHEDULED") {
+      toast.error(`Already in ${pump.stage}—move it in Kanban instead?`);
+      setActiveId(null);
+      return;
+    }
+
+    const dropDate = startOfDay(new Date(targetDate));
+    if (!isValidScheduleDate(dropDate)) {
+      toast.error("Choose a future date to schedule this pump.");
+      setActiveId(null);
+      return;
+    }
+
+    schedulePump(pump.id, dropDate.toISOString().split('T')[0]);
+
+    toast.success(`Scheduled ${pump.model} starting on ${dropDate.toLocaleDateString()}`);
 
     setActiveId(null);
   };

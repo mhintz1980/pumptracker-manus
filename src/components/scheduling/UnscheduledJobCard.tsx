@@ -38,11 +38,19 @@ export function UnscheduledJobCard({ pump, collapsed }: UnscheduledJobCardProps)
       {...attributes}
       {...listeners}
       className="group relative overflow-hidden rounded-xl border border-border bg-card/90 px-4 py-4 shadow-layer-md transition-all duration-200 hover:-translate-y-[2px] hover:shadow-layer-lg cursor-grab active:cursor-grabbing"
+      data-pump-id={pump.id}
+      data-scheduled-state={pump.scheduledStart ? "true" : "false"}
     >
       <span
         className="pointer-events-none absolute inset-y-0 left-0 w-1"
         style={{ backgroundColor: stripColor(pump) }}
       />
+      {pump.scheduledStart && (
+        <div className="mb-2 flex items-center justify-between text-[11px] font-semibold text-emerald-500">
+          <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-emerald-400">Scheduled</span>
+          <span className="text-foreground/70">{formatDate(pump.scheduledStart)}</span>
+        </div>
+      )}
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 space-y-1">
           <div className="text-sm font-semibold text-foreground truncate" title={pump.model}>
@@ -76,6 +84,12 @@ export function UnscheduledJobCard({ pump, collapsed }: UnscheduledJobCardProps)
             <span>PO</span>
             <span className="font-medium text-foreground">{pump.po}</span>
           </div>
+          {pump.scheduledStart && (
+            <div className="flex items-center justify-between">
+              <span>Start</span>
+              <span className="font-medium text-foreground">{formatDate(pump.scheduledStart)}</span>
+            </div>
+          )}
           <div className="flex items-center justify-between">
             <span>Value</span>
             <span className="font-semibold text-foreground">{formatCurrency(pump.value)}</span>

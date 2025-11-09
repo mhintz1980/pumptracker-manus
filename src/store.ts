@@ -59,6 +59,8 @@ interface AppState {
   addPO: (payload: AddPoPayload) => void;
   moveStage: (id: string, to: Stage) => void;
   updatePump: (id: string, patch: Partial<Pump>) => void;
+  schedulePump: (id: string, dropDate: string) => void;
+  clearSchedule: (id: string) => void;
   replaceDataset: (rows: Pump[]) => void;
   toggleStageCollapse: (stage: Stage) => void;
   toggleCollapsedCards: () => void;
@@ -75,11 +77,13 @@ export const useApp = create<AppState>()(
       pumps: [],
       filters: {},
       collapsedStages: {
+        "UNSCHEDULED": false,
         "NOT STARTED": false, FABRICATION: false, "POWDER COAT": false,
         ASSEMBLY: false, TESTING: false, SHIPPING: false, CLOSED: false
       } as Record<Stage, boolean>,
       collapsedCards: false,
       wipLimits: {
+        "UNSCHEDULED": null, // No limit for unscheduled queue
         "NOT STARTED": 12,
         FABRICATION: 8,
         "POWDER COAT": 6,
@@ -110,7 +114,7 @@ export const useApp = create<AppState>()(
             po,
             customer,
             model: line.model,
-            stage: "NOT STARTED",
+            stage: "UNSCHEDULED",
             priority: line.priority ?? "Normal",
             powder_color: line.color,
             last_update: dateReceived || new Date().toISOString(),
@@ -169,6 +173,40 @@ export const useApp = create<AppState>()(
         }));
       },
 
+      schedulePump: (id: string, dropDate: string) => {
+        const { pumps, getModelLeadTimes } = get();
+        const pump = pumps.find(p => p.id === id);
+
+        if (!pump) return;
+
+        // Get lead times for this model
+        const leadTimes = getModelLeadTimes(pump.model);
+        if (!leadTimes) return;
+
+        // Calculate start/end dates based on lead times
+        const totalDays = Object.values(leadTimes).reduce((sum, days) => sum + days, 0);
+        const startDate = new Date(dropDate);
+        const endDate = new Date(startDate);
+        endDate.setDate(startDate.getDate() + totalDays);
+
+        // Update pump with schedule and advance stage
+        get().updatePump(id, {
+          scheduledStart: startDate.toISOString().split('T')[0],
+          scheduledEnd: endDate.toISOString().split('T')[0],
+          stage: "NOT STARTED",
+          last_update: new Date().toISOString(),
+        });
+      },
+
+      clearSchedule: (id: string) => {
+        get().updatePump(id, {
+          scheduledStart: undefined,
+          scheduledEnd: undefined,
+          stage: "UNSCHEDULED",
+          last_update: new Date().toISOString(),
+        });
+      },
+
       filtered: () => applyFilters(get().pumps, get().filters),
 
       getModelLeadTimes: (model: string) => {
@@ -177,7 +215,7 @@ export const useApp = create<AppState>()(
       },
     }),
     {
-      name: "pumptracker-lite-v2-catalog",
+      name: "pumptracker-lite-v3-catalog",
       // Only persist filters and collapsed stages, not the pumps array itself 
       // since the adapter handles persistence.
       partialize: (state) => ({

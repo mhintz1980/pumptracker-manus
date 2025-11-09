@@ -17,7 +17,7 @@ PumpTracker Lite is a lightweight yet powerful web application designed to help 
 - **Order Details Table**: Comprehensive sortable table with all pump order information
 
 ### Kanban Board View
-- **7-Stage Production Pipeline**: NOT STARTED → FABRICATION → POWDER COAT → ASSEMBLY → TESTING → SHIPPING → CLOSED
+- **8-Stage Production Pipeline**: UNSCHEDULED → NOT STARTED → FABRICATION → POWDER COAT → ASSEMBLY → TESTING → SHIPPING → CLOSED
 - **Drag-and-Drop Interface**: Move pumps between stages with intuitive drag-and-drop functionality
 - **Smart Card Display**: Each pump card shows essential information including:
   - Model and Serial Number
@@ -26,6 +26,14 @@ PumpTracker Lite is a lightweight yet powerful web application designed to help 
   - Scheduled End Date
   - Priority Badge (Low, Normal, High, Rush, Urgent)
   - Color-Coded Priority Indicators
+
+### Scheduling View
+- **Unscheduled Queue**: Sidebar showing all pumps in "UNSCHEDULED" stage ready for scheduling
+- **Drag-and-Drop Calendar**: Intuitive 4-week calendar grid where pumps can be dropped to assign dates
+- **Automatic Stage Progression**: When a pump is scheduled, it automatically moves from "UNSCHEDULED" to "NOT STARTED"
+- **Smart Scheduling**: Uses model-specific lead times to calculate optimal start and end dates
+- **Calendar Event Display**: Scheduled pumps appear as color-coded events on the calendar with stage metadata
+- **Empty State Management**: Helpful messaging when all pumps are scheduled with navigation to upcoming work
 
 ### Filtering & Search
 - **Multi-Criteria Filtering**: Filter by PO, Customer, Model, Priority, and Stage

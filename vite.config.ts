@@ -13,7 +13,7 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     pool: "threads",
-    include: ["src/**/*.{test,spec}.{ts,tsx}", "tests/**/*.spec.ts"],
+    include: ["src/**/*.{test,spec}.{ts,tsx}", "tests/**/*.spec.ts", "tests/**/*.spec.tsx"],
     exclude: ["tests/e2e/**", "tests/e2e*.spec.ts"],
   },
 })

@@ -219,3 +219,32 @@ All changes permanently saved in `/home/markimus/projects/pumptracker-variants/p
 - Migration reports for future reference
 
 **Project Status**: ✅ **COMPLETE - Production Ready**
+
+## 📅 **Scheduling Lifecycle Enhancement** (2025-01-13)
+
+### **Rationale for UNSCHEDULED Stage Introduction**
+The scheduling lifecycle update addresses a fundamental UX issue where pumps existed in an ambiguous state between "unscheduled" and "scheduled." This created cognitive overhead for users trying to understand which pumps needed scheduling versus which were already in production.
+
+**Problem Solved**:
+- **Before**: Users couldn't distinguish between "ready to schedule" vs "already in production" pumps
+- **After**: Clear separation with UNSCHEDULED queue for work that needs scheduling
+
+### **Design Philosophy Alignment**
+This enhancement follows the project's core principles:
+
+1. **Ruthless Simplicity**: Single source of truth for pump state (no dual filtering)
+2. **User-Centric Workflow**: Natural progression from queue → calendar → production
+3. **Deterministic Behavior**: Predictable state transitions for testing
+4. **Minimal Breaking Changes**: Existing calendar and Kanban views work unchanged
+
+### **Technical Implementation Benefits**
+- **State Clarity**: Each pump has exactly one stage at any time
+- **Testability**: Clear assertions for UNSCHEDULED → NOT STARTED transitions
+- **Performance**: Simplified filtering logic (no compound stage checks)
+- **Data Integrity**: Version bump prevents stale data conflicts
+
+### **User Experience Improvements**
+- **Visual Clarity**: Sidebar shows only work that needs attention
+- **Workflow Efficiency**: Drag-and-drop scheduling with automatic stage advancement
+- **Error Prevention**: Guard logic prevents accidental over-scheduling of production pumps
+- **Success Feedback**: Clear confirmation when scheduling succeeds

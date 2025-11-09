@@ -3,7 +3,10 @@ import { Button } from "../ui/Button";
 
 export function CalendarHeader() {
   return (
-    <div className="flex items-center justify-end gap-3 border-b border-border bg-card px-6 py-4">
+    <div
+      className="flex items-center justify-end gap-3 border-b border-border bg-card px-6 py-4"
+      data-testid="calendar-header"
+    >
       <Button variant="outline" size="sm" className="rounded-full px-5">
         Level
       </Button>

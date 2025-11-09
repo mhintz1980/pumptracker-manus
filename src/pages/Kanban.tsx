@@ -15,7 +15,7 @@ export const Kanban = ({ pumps, onSelectPump }: KanbanProps) => {
   const toggleCollapsedCards = useApp((state) => state.toggleCollapsedCards);
 
   return (
-    <div className="flex h-full flex-col gap-3">
+    <div className="flex h-full flex-col gap-3" data-testid="kanban-view">
       <div className="flex items-center gap-2 text-xs text-muted-foreground" style={{ marginTop: "-10px" }}>
         <Button
           variant="ghost"

@@ -21,7 +21,7 @@ export class SchedulingPageHelper {
 
   // Component getters
   getUnscheduledJobs(): Locator {
-    return this.page.locator('.w-\\[300px\\] [data-pump-id]');
+    return this.page.locator('[data-testid="scheduling-sidebar"] [data-pump-id]');
   }
 
   getCalendarCells(): Locator {
@@ -29,19 +29,28 @@ export class SchedulingPageHelper {
   }
 
   getCalendarEvents(): Locator {
-    return this.page.locator('[data-testid="calendar-event"], .calendar-event');
+    return this.page.locator('[data-testid="calendar-event"]');
   }
 
   getEventDetailPanel(): Locator {
-    return this.page.locator('[data-testid="event-detail-panel"], .event-detail-panel');
+    return this.page.locator('[data-testid="event-detail-panel"]');
   }
 
   getSchedulingSidebar(): Locator {
-    return this.page.locator('.w-\\[300px\\], [data-testid="scheduling-sidebar"]');
+    return this.page.locator('[data-testid="scheduling-sidebar"]');
   }
 
   getMainCalendarGrid(): Locator {
-    return this.page.locator('[data-testid="calendar-grid"], .calendar-grid');
+    return this.page.locator('[data-testid="calendar-grid"]');
+  }
+
+  // New lifecycle helpers
+  getCalendarEventByPumpId(pumpId: string): Locator {
+    return this.page.locator(`[data-pump-id="${pumpId}"][data-testid="calendar-event"]`);
+  }
+
+  getCalendarEventByStage(stage: string): Locator {
+    return this.page.locator(`[data-stage="${stage}"][data-testid="calendar-event"]`);
   }
 
   // Wait helpers
@@ -150,6 +159,33 @@ export const Assertions = {
     } else {
       expect(isInSidebar).toBeFalsy();
     }
+  },
+
+  async expectJobStage(page: Page, pumpId: string, expectedStage: string) {
+    const helper = new SchedulingPageHelper(page);
+
+    if (expectedStage === "UNSCHEDULED") {
+      // Check if job is in sidebar (only UNSCHEDULED jobs appear there)
+      const isInSidebar = await helper.isJobInSidebar(pumpId);
+      expect(isInSidebar).toBeTruthy();
+    } else {
+      // Check if job appears on calendar with correct stage
+      const calendarEvent = helper.getCalendarEventByPumpId(pumpId);
+      await expect(calendarEvent).toBeVisible();
+      await expect(calendarEvent).toHaveAttribute('data-stage', expectedStage);
+
+      // Verify job is NOT in sidebar
+      const isInSidebar = await helper.isJobInSidebar(pumpId);
+      expect(isInSidebar).toBeFalsy();
+    }
+  },
+
+  async expectJobToBeUnscheduled(page: Page, pumpId: string) {
+    await this.expectJobStage(page, pumpId, "UNSCHEDULED");
+  },
+
+  async expectJobToBeScheduled(page: Page, pumpId: string) {
+    await this.expectJobStage(page, pumpId, "NOT STARTED");
   },
 
   async expectComponentToBeVisible(locator: Locator, timeout: number = 5000) {

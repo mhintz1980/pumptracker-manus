@@ -1,54 +1,73 @@
 // src/components/scheduling/MainCalendarGrid.tsx
-import { CalendarEvent } from './CalendarEvent';
-import { useDroppable } from '@dnd-kit/core';
-import { format } from 'date-fns';
-import { cn } from '../../lib/utils';
-import { useApp } from '../../store';
-
-
-// Placeholder for event data structure based on MainCalendarGrid.tsx
-interface CalendarEventData {
-  id: string;
-  title: string;
-  color: string;
-  startDay: number;
-  span: number;
-  week: number;
-  row: number;
-  icon?: string;
-  fullTitle: string;
-  dateRange: string;
-  calendar: string;
-  calendarColor: string;
-  type: string;
-  typeIcon: string;
-  description: string;
-}
+import { useMemo } from "react";
+import { useDroppable } from "@dnd-kit/core";
+import { addDays, format, startOfDay, startOfWeek } from "date-fns";
+import { cn } from "../../lib/utils";
+import { useApp } from "../../store";
+import { CalendarEvent } from "./CalendarEvent";
+import {
+  buildCalendarEvents,
+  type CalendarStageEvent,
+} from "../../lib/schedule";
+import type { Stage } from "../../types";
 
 interface MainCalendarGridProps {
-  onEventClick: (event: CalendarEventData) => void;
+  onEventClick: (event: CalendarStageEvent) => void;
 }
 
+const STAGE_LABELS: Record<Stage, string> = {
+  "UNSCHEDULED": "Unscheduled",
+  "NOT STARTED": "Not Started",
+  FABRICATION: "Fabrication",
+  "POWDER COAT": "Powder Coat",
+  ASSEMBLY: "Assembly",
+  TESTING: "Testing",
+  SHIPPING: "Shipping",
+  CLOSED: "Closed",
+};
+
+const STAGE_COLORS: Record<Stage, string> = {
+  "UNSCHEDULED": "bg-gradient-to-r from-gray-500/40 to-gray-400/30",
+  "NOT STARTED": "bg-gradient-to-r from-slate-500/40 to-slate-400/30",
+  FABRICATION: "bg-gradient-to-r from-blue-500/70 to-sky-400/70",
+  "POWDER COAT": "bg-gradient-to-r from-purple-500/70 to-fuchsia-400/70",
+  ASSEMBLY: "bg-gradient-to-r from-amber-500/70 to-orange-400/70",
+  TESTING: "bg-gradient-to-r from-rose-500/70 to-orange-400/70",
+  SHIPPING: "bg-gradient-to-r from-emerald-500/70 to-lime-400/70",
+  CLOSED: "bg-gradient-to-r from-cyan-500/70 to-blue-400/70",
+};
+
+const weeks = 4;
+const daysInView = weeks * 7;
+
 export function MainCalendarGrid({ onEventClick }: MainCalendarGridProps) {
-  const { pumps } = useApp();
+  const pumps = useApp((state) => state.pumps);
+  const { getModelLeadTimes } = useApp.getState();
 
-  // The provided MainCalendarGrid.tsx is a static mock.
-  // We will use a simplified, dynamic version for the initial implementation.
+  const today = useMemo(() => startOfDay(new Date()), []);
+  const viewStart = useMemo(
+    () => startOfDay(startOfWeek(today, { weekStartsOn: 1 })),
+    [today]
+  );
 
-  // 1. Define the current view (e.g., 4 weeks starting today)
-  const today = new Date();
-  const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay() + 1));
-  const weeks = 4;
-  const daysInView = weeks * 7;
-  const viewDates = Array.from({ length: daysInView }).map((_, i) => {
-    const date = new Date(startOfWeek);
-    date.setDate(startOfWeek.getDate() + i);
-    return date;
-  });
+  const viewDates = useMemo(
+    () => Array.from({ length: daysInView }, (_, index) => addDays(viewStart, index)),
+    [viewStart]
+  );
 
-  // Helper component for a droppable calendar cell
+  const events = useMemo(
+    () =>
+      buildCalendarEvents({
+        pumps,
+        viewStart,
+        days: daysInView,
+        leadTimeLookup: getModelLeadTimes,
+      }),
+    [pumps, viewStart, getModelLeadTimes]
+  );
+
   const DroppableCell = ({ date }: { date: Date }) => {
-    const dateId = format(date, 'yyyy-MM-dd');
+    const dateId = format(date, "yyyy-MM-dd");
     const { isOver, setNodeRef } = useDroppable({
       id: dateId,
       data: { date: dateId },
@@ -58,48 +77,17 @@ export function MainCalendarGrid({ onEventClick }: MainCalendarGridProps) {
       <div
         ref={setNodeRef}
         className={cn(
-          "border-r border-white/10 transition-colors",
+          "calendar-cell border-r border-white/10 transition-colors",
           isOver && "bg-emerald-400/15"
         )}
-      ></div>
+        style={{ minHeight: 28 }}
+        data-testid={`calendar-cell-${dateId}`}
+      />
     );
   };
 
-  // 2. Mock event data based on scheduled pumps
-  // For the initial implementation, we will only show "FABRICATION" as a scheduled event
-  // since the other stages are part of the Kanban flow.
-  const scheduledEvents: CalendarEventData[] = pumps
-    .filter(p => p.stage === "FABRICATION" && p.scheduledStart)
-    .map((pump, index) => {
-      // Logic to convert pump data to CalendarEventData
-      const startDate = new Date(pump.scheduledStart!);
-      const startDayIndex = viewDates.findIndex(d => d.toDateString() === startDate.toDateString());
-      
-      // Mock span for now, based on the lead time for fabrication (1.5 days)
-      const leadTimes = useApp.getState().getModelLeadTimes(pump.model);
-      const span = Math.ceil(leadTimes?.fabrication || 1); // Use fabrication lead time
-
-      return {
-        id: pump.id,
-        title: `${pump.model} - ${pump.po}`,
-        fullTitle: `${pump.model} - ${pump.po} for ${pump.customer}`,
-        color: 'bg-gradient-to-r from-blue-500/60 to-sky-400/60 hover:from-blue-500 hover:to-sky-400',
-        startDay: (startDayIndex % 7), // Day of the week (0-6)
-        span: span,
-        week: Math.floor(startDayIndex / 7),
-        row: (index % 4) + 1, // Simple row assignment for now
-        dateRange: `${startDate.toDateString()} - ${new Date(startDate.getTime() + span * 24 * 60 * 60 * 1000).toDateString()}`,
-        calendar: 'Production',
-        calendarColor: 'bg-blue-500',
-        type: 'Fabrication',
-        typeIcon: '🛠️',
-        description: `Fabrication for ${pump.model} for ${pump.customer}`,
-      } as CalendarEventData;
-    });
-
-  // 3. Render the grid
   return (
-    <div className="flex-1 overflow-auto bg-transparent">
+    <div className="flex-1 overflow-auto bg-transparent" data-testid="calendar-grid">
       <div className="min-w-[1000px]">
         {Array.from({ length: weeks }).map((_, weekIndex) => {
           const weekStart = weekIndex * 7;
@@ -127,18 +115,15 @@ export function MainCalendarGrid({ onEventClick }: MainCalendarGridProps) {
                 ))}
               </div>
 
-              {/* Week Events Grid */}
               <div className="relative min-h-[150px]">
-                {/* Background grid lines (Droppable Cells) */}
                 <div className="grid grid-cols-7 absolute inset-0">
                   {weekDates.map((date, i) => (
                     <DroppableCell key={i} date={date} />
                   ))}
                 </div>
 
-                {/* Events for this week */}
-                <div className="relative grid grid-cols-7 gap-y-1 p-2" style={{ gridAutoRows: '28px' }}>
-                  {scheduledEvents
+                <div className="relative grid grid-cols-7 gap-y-1 p-2" style={{ gridAutoRows: '32px' }}>
+                  {events
                     .filter((event) => event.week === weekIndex)
                     .map((event) => (
                       <div
@@ -152,9 +137,15 @@ export function MainCalendarGrid({ onEventClick }: MainCalendarGridProps) {
                       >
                         <CalendarEvent
                           title={event.title}
-                          color={event.color}
+                          subtitle={event.subtitle}
+                          stageLabel={STAGE_LABELS[event.stage]}
+                          colorClass={
+                            STAGE_COLORS[event.stage] ?? "bg-gradient-to-r from-slate-500/40 to-slate-400/30"
+                          }
                           startCol={event.startDay}
                           span={event.span}
+                          pumpId={event.pumpId}
+                          stage={event.stage}
                           onClick={() => onEventClick(event)}
                         />
                       </div>

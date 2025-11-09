@@ -116,6 +116,36 @@ This will show you:
 - [x] Stage name conversion working
 - [x] BOM data integrated
 
+## 📅 **Scheduling Lifecycle Update** (2025-01-13)
+
+### **New Stage Added**
+- **UNSCHEDULED**: New initial stage for all newly created pumps
+- **Stage Pipeline**: UNSCHEDULED → NOT STARTED → FABRICATION → POWDER COAT → ASSEMBLY → TESTING → SHIPPING → CLOSED
+- **Default Behavior**: All pumps from Add PO now start in "UNSCHEDULED" stage
+
+### **Scheduling Enhancements**
+- **Unscheduled Queue**: Sidebar now shows only pumps in "UNSCHEDULED" stage
+- **Smart Scheduling**: `schedulePump()` action automatically calculates dates and advances stage
+- **Schedule Clearing**: `clearSchedule()` action removes dates and returns pump to "UNSCHEDULED"
+- **Drag & Drop**: Calendar drops now use new `schedulePump()` action with guard logic
+
+### **Calendar Integration**
+- **Stage Metadata**: Calendar events now include `data-stage` attribute
+- **Visual Feedback**: Color-coded events show current pump stage
+- **Persistence**: v3 storage key prevents stale data conflicts
+
+### **Testing Updates**
+- **Test Helpers**: New `expectJobToBeUnscheduled()` and `expectJobToBeScheduled()` assertions
+- **Lifecycle Tests**: Updated to verify UNSCHEDULED → NOT STARTED transitions
+- **Sidebar Tests**: Confirm pumps disappear from sidebar after scheduling
+
+### **What You'll See**
+1. **New pumps start in sidebar** with "UNSCHEDULED" status
+2. **Drag to calendar** automatically moves pump to "NOT STARTED"
+3. **Pump disappears from sidebar** after successful scheduling
+4. **Calendar events** show current stage with color coding
+5. **Empty state** shows "All pumps scheduled—nice!" message
+
 ## 🎉 **Ready for Review**
 
 The pumptracker app is now running with real catalog data instead of mock data. All the changes you requested have been implemented and are visible in the browser at http://localhost:5173/.

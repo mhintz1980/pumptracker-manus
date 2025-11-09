@@ -1,0 +1,11 @@
+# Useful Commands
+- `pnpm install` — install dependencies.
+- `pnpm dev` — start Vite dev server (http://localhost:5173).
+- `pnpm preview` — preview production build locally.
+- `pnpm build` — type-check + build (tsc -b + vite build).
+- `pnpm lint` — run ESLint (TS/React hooks).
+- `pnpm test` — run Vitest unit/component tests.
+- `pnpm test:e2e` — headless Playwright suite (variants: `:headed`, `:ui`, `:debug`).
+- `pnpm test:e2e:report` — open last Playwright report.
+- `pnpm test:e2e:codegen` — launch Playwright codegen.
+- `pnpm test:e2e:install` — install browser binaries.

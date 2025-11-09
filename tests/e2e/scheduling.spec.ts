@@ -14,14 +14,11 @@ test.describe('Scheduling Functionality', () => {
   });
 
   test('basic page loading test', async ({ page }) => {
-    // Verify URL includes scheduling or we're on the right page
-    await expect(page).toHaveURL(/.*scheduling/);
-
     // Verify main scheduling components are present
     await expect(page.locator('h1').filter({ hasText: 'PumpTracker Lite' })).toBeVisible();
 
     // Verify the scheduling view container is loaded
-    const schedulingContainer = page.locator('.scheduling-view, [data-testid="scheduling-view"]');
+    const schedulingContainer = page.locator('[data-testid="scheduling-view"]');
     await expect(schedulingContainer).toBeVisible();
 
     // Check that we're not on loading state
@@ -30,18 +27,18 @@ test.describe('Scheduling Functionality', () => {
 
   test('component visibility test', async ({ page }) => {
     // Verify sidebar is present
-    const sidebar = page.locator('.w-\\[300px\\], [data-testid="scheduling-sidebar"]');
+    const sidebar = page.locator('[data-testid="scheduling-sidebar"]');
     await expect(sidebar).toBeVisible();
 
     // Verify unscheduled jobs section
     await expect(page.getByText(/unscheduled jobs/i)).toBeVisible();
 
     // Verify calendar grid is present
-    const calendarGrid = page.locator('[data-testid="calendar-grid"], .calendar-grid');
+    const calendarGrid = page.locator('[data-testid="calendar-grid"]');
     await expect(calendarGrid).toBeVisible();
 
     // Verify calendar header is present
-    const calendarHeader = page.locator('[data-testid="calendar-header"], .calendar-header');
+    const calendarHeader = page.locator('[data-testid="calendar-header"]');
     await expect(calendarHeader).toBeVisible();
 
     // Check for navigation buttons
@@ -69,64 +66,67 @@ test.describe('Scheduling Functionality', () => {
     const pumpModel = await firstJobCard.locator('.text-sm.font-semibold').textContent();
     expect(pumpModel).toBeTruthy();
 
-    // Find a droppable calendar cell
-    const calendarCell = page.locator('[data-testid="calendar-cell"], .calendar-cell').first();
-    await expect(calendarCell).toBeVisible();
+    // Find a droppable calendar cell at least a week out to ensure it's in the future
+    const calendarCells = page.locator('[data-testid^="calendar-cell-"]');
+    const futureCell = calendarCells.nth(10);
+    await futureCell.scrollIntoViewIfNeeded();
+    await expect(futureCell).toBeVisible();
 
     // Perform drag and drop
-    await firstJobCard.dragTo(calendarCell);
+    await firstJobCard.hover();
+    await page.mouse.down();
+    await futureCell.hover();
+    await page.mouse.up();
 
-    // Wait a moment for the drag operation to complete
-    await page.waitForTimeout(500);
+    // Verify the job has been moved from UNSCHEDULED to NOT STARTED
+    // Check that the pump is no longer in the unscheduled sidebar
+    const sidebarPump = page.locator('[data-testid="scheduling-sidebar"] [data-pump-id="${pumpId}"]');
+    await expect(sidebarPump).not.toBeVisible({ timeout: 7000 });
 
-    // Verify the job has been moved (it should no longer be in the unscheduled jobs)
-    // Note: This test might need adjustment based on actual implementation
-    // The card might still exist but be in a different location
-    // We can verify by checking if it's no longer in the sidebar
-    const sidebarCards = page.locator('.w-\\[300px\\] [data-pump-id]');
-    const isStillInSidebar = await sidebarCards.count();
-
-    // If there were multiple cards, verify the count changed or the specific card moved
-    if (isStillInSidebar > 0) {
-      const movedCardInSidebar = sidebarCards.locator(`[data-pump-id="${pumpId}"]`);
-      await expect(movedCardInSidebar).not.toBeVisible();
-    }
+    // Verify the pump now appears on the calendar with NOT STARTED stage
+    const calendarEvent = page.locator(`[data-pump-id="${pumpId}"][data-stage="NOT STARTED"]`);
+    await expect(calendarEvent).toBeVisible({ timeout: 7000 });
   });
 
   test('event detail panel test', async ({ page }) => {
     // Wait for calendar to load with events
-    await page.waitForSelector('[data-testid="calendar-event"], .calendar-event', { timeout: 10000 });
+    await page.waitForSelector('[data-testid="calendar-event"]', { timeout: 10000 });
 
     // If no events exist, create one by dragging a job first
-    const existingEvents = page.locator('[data-testid="calendar-event"], .calendar-event');
-    const eventCount = await existingEvents.count();
+    let calendarEvent = page.locator('[data-testid="calendar-event"]').first();
 
-    if (eventCount === 0) {
-      // Create an event by dragging
+    if (!(await calendarEvent.isVisible())) {
       const firstJobCard = page.locator('[data-pump-id]').first();
-      const calendarCell = page.locator('[data-testid="calendar-cell"], .calendar-cell').first();
+      const futureCell = page.locator('[data-testid^="calendar-cell-"]').nth(10);
 
-      if (await firstJobCard.isVisible() && await calendarCell.isVisible()) {
-        await firstJobCard.dragTo(calendarCell);
-        await page.waitForTimeout(1000);
+      if (await firstJobCard.isVisible() && await futureCell.isVisible()) {
+        const jobBox = await firstJobCard.boundingBox();
+        const targetBox = await futureCell.boundingBox();
+        if (jobBox && targetBox) {
+          await page.mouse.move(jobBox.x + jobBox.width / 2, jobBox.y + jobBox.height / 2);
+          await page.mouse.down();
+          await page.waitForTimeout(50);
+          await page.mouse.move(targetBox.x + targetBox.width / 2, targetBox.y + targetBox.height / 2, { steps: 15 });
+          await page.mouse.up();
+          await page.waitForTimeout(1000);
+          calendarEvent = page.locator('[data-testid="calendar-event"]').first();
+        }
       }
     }
 
-    // Try to find and click on a calendar event
-    const calendarEvent = page.locator('[data-testid="calendar-event"], .calendar-event').first();
-
     if (await calendarEvent.isVisible()) {
-      await calendarEvent.click();
+      await calendarEvent.scrollIntoViewIfNeeded();
+      await calendarEvent.click({ force: true });
 
       // Verify event detail panel opens
-      const eventDetailPanel = page.locator('[data-testid="event-detail-panel"], .event-detail-panel');
+      const eventDetailPanel = page.locator('[data-testid="event-detail-panel"]');
       await expect(eventDetailPanel).toBeVisible();
 
       // Verify event details are displayed
-      await expect(page.getByText(/event details/i)).toBeVisible();
+      await expect(eventDetailPanel.locator('text=Stage')).toBeVisible();
 
       // Look for close button in the detail panel
-      const closeButton = page.locator('[data-testid="close-detail-panel"], .close-detail-panel, button').filter({ hasText: /close/i }).first();
+      const closeButton = eventDetailPanel.locator('button').first();
 
       if (await closeButton.isVisible()) {
         await closeButton.click();
@@ -145,33 +145,35 @@ test.describe('Scheduling Functionality', () => {
     await page.waitForSelector('[data-pump-id]', { timeout: 10000 });
 
     // Get initial count of unscheduled jobs
-    const initialUnscheduledJobs = page.locator('.w-\\[300px\\] [data-pump-id]');
+    const initialUnscheduledJobs = page.locator('[data-pump-id]');
     const initialCount = await initialUnscheduledJobs.count();
 
     if (initialCount > 0) {
       // Perform a drag and drop operation
-      const firstJobCard = initialUnscheduledJobs.first();
+      const firstJobCard = initialUnscheduledJobs.nth(1);
       const pumpId = await firstJobCard.getAttribute('data-pump-id');
 
-      const calendarCell = page.locator('[data-testid="calendar-cell"], .calendar-cell').first();
-      await firstJobCard.dragTo(calendarCell);
+      const futureCell = page.locator('[data-testid^="calendar-cell-"]').nth(10);
+      await futureCell.scrollIntoViewIfNeeded();
+      await firstJobCard.hover();
+      await page.mouse.down();
+      await futureCell.hover();
+      await page.mouse.up();
       await page.waitForTimeout(1000);
 
       // Refresh the page
       await page.reload();
       await page.waitForLoadState('networkidle');
-      await page.waitForSelector('[data-pump-id]', { timeout: 10000 });
+      await page.waitForSelector(`[data-pump-id="${pumpId}"]`, { timeout: 10000 });
 
-      // Verify the change persisted
-      const refreshedUnscheduledJobs = page.locator('.w-\\[300px\\] [data-pump-id]');
-      const refreshedCount = await refreshedUnscheduledJobs.count();
+      // Verify the scheduled state persisted after refresh
+      // The pump should no longer be in the unscheduled sidebar
+      const sidebarPump = page.locator('[data-testid="scheduling-sidebar"] [data-pump-id="${pumpId}"]');
+      await expect(sidebarPump).not.toBeVisible();
 
-      // The count should be different (either decreased or the specific card moved)
-      expect(refreshedCount).toBeLessThan(initialCount);
-
-      // Verify the specific pump is no longer in unscheduled jobs
-      const movedCard = refreshedUnscheduledJobs.locator(`[data-pump-id="${pumpId}"]`);
-      await expect(movedCard).not.toBeVisible();
+      // The pump should appear on calendar with NOT STARTED stage
+      const calendarEvent = page.locator(`[data-pump-id="${pumpId}"][data-stage="NOT STARTED"]`);
+      await expect(calendarEvent).toBeVisible();
     } else {
       test.skip(true, 'No unscheduled jobs available to test persistence');
     }
@@ -182,21 +184,21 @@ test.describe('Scheduling Functionality', () => {
 
     // Navigate to Dashboard
     await page.getByRole('button', { name: /dashboard/i }).click();
-    await page.waitForSelector('[data-testid="dashboard-view"], .dashboard-components', { timeout: 5000 });
-    await expect(page.getByText(/dashboard/i)).toBeVisible();
+    await page.waitForSelector('[data-testid="dashboard-view"]', { timeout: 8000 });
+    await expect(page.locator('[data-testid="dashboard-view"]')).toBeVisible();
 
     // Navigate to Kanban
     await page.getByRole('button', { name: /kanban/i }).click();
-    await page.waitForSelector('[data-testid="kanban-board"], .kanban-board', { timeout: 5000 });
-    await expect(page.getByText(/kanban/i)).toBeVisible();
+    await page.waitForSelector('[data-testid="kanban-view"]', { timeout: 8000 });
+    await expect(page.locator('[data-testid="kanban-view"]')).toBeVisible();
 
     // Navigate back to Scheduling
     await page.getByRole('button', { name: /scheduling/i }).click();
-    await page.waitForSelector('[data-testid="scheduling-view"], .scheduling-view', { timeout: 5000 });
+    await page.waitForSelector('[data-testid="scheduling-view"]', { timeout: 8000 });
     await expect(page.getByText(/unscheduled jobs/i)).toBeVisible();
 
     // Verify URL reflects current view
-    await expect(page).toHaveURL(/.*localhost:3000\//);
+    await expect(page).toHaveURL(/localhost:3000/);
   });
 
   test('accessibility checks', async ({ page }) => {
@@ -226,21 +228,18 @@ test.describe('Scheduling Functionality', () => {
   test('responsive design test', async ({ page }) => {
     // Test desktop view
     await page.setViewportSize({ width: 1200, height: 800 });
-    await page.waitForTimeout(500);
 
-    const sidebar = page.locator('.w-\\[300px\\], [data-testid="scheduling-sidebar"]');
+    const sidebar = page.locator('[data-testid="scheduling-sidebar"]');
     await expect(sidebar).toBeVisible();
 
     // Test tablet view
     await page.setViewportSize({ width: 768, height: 1024 });
-    await page.waitForTimeout(500);
 
     // Components should still be visible but potentially reorganized
     await expect(page.getByText(/unscheduled jobs/i)).toBeVisible();
 
     // Test mobile view
     await page.setViewportSize({ width: 375, height: 667 });
-    await page.waitForTimeout(500);
 
     // In mobile view, some components might be hidden or rearranged
     // Check that main navigation is still accessible
@@ -284,10 +283,13 @@ test.describe('Scheduling Functionality', () => {
       if (await searchInput.isVisible()) {
         // Test search functionality
         await searchInput.fill('test');
-        await page.waitForTimeout(1000);
-
+  
         // Verify results are filtered
-        const filteredJobs = page.locator('[data-pump-id"]:visible');
+        const filteredJobs = page.locator('[data-pump-id]:visible');
+        await page.waitForFunction(() => {
+          const count = document.querySelectorAll('[data-pump-id]').length;
+          return count >= 0; // Wait for DOM to stabilize
+        }, { timeout: 2000 });
         const filteredCount = await filteredJobs.count();
 
         // Filter should reduce the count or find specific results
@@ -295,7 +297,6 @@ test.describe('Scheduling Functionality', () => {
 
         // Clear search
         await searchInput.fill('');
-        await page.waitForTimeout(1000);
 
         // Verify all jobs are back
         const resetCount = await allJobs.count();

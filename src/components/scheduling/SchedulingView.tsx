@@ -1,46 +1,27 @@
 // src/components/scheduling/SchedulingView.tsx
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useApp } from "../../store";
 import { SchedulingSidebar } from "./SchedulingSidebar";
 import { DragAndDropContext } from "./DragAndDropContext";
 import { CalendarHeader } from "./CalendarHeader";
 import { MainCalendarGrid } from "./MainCalendarGrid";
 import { EventDetailPanel } from "./EventDetailPanel";
-import { useState } from "react";
-
-// Placeholder for event data structure based on MainCalendarGrid.tsx
-interface CalendarEventData {
-  id: string;
-  title: string;
-  color: string;
-  startDay: number;
-  span: number;
-  week: number;
-  row: number;
-  icon?: string;
-  fullTitle: string;
-  dateRange: string;
-  calendar: string;
-  calendarColor: string;
-  type: string;
-  typeIcon: string;
-  description: string;
-}
+import type { CalendarStageEvent } from "../../lib/schedule";
 
 export function SchedulingView() {
   const { pumps } = useApp();
   useEffect(() => {
     console.log('pumps in SchedulingView:', pumps);
   }, [pumps]);
-  const [selectedEvent, setSelectedEvent] = useState<CalendarEventData | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<CalendarStageEvent | null>(null);
 
-  const handleEventClick = (event: CalendarEventData) => {
+  const handleEventClick = (event: CalendarStageEvent) => {
     setSelectedEvent(event);
   };
 
   return (
     <DragAndDropContext>
-      <div className="flex flex-col h-[calc(100vh-100px)]">
+      <div className="flex flex-col h-[calc(100vh-100px)]" data-testid="scheduling-view">
         <CalendarHeader />
         <div className="flex flex-1 overflow-hidden">
           <SchedulingSidebar />
@@ -53,4 +34,3 @@ export function SchedulingView() {
     </DragAndDropContext>
   );
 }
-

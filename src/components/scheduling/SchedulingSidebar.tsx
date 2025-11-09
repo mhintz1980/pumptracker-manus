@@ -10,11 +10,14 @@ export function SchedulingSidebar() {
   const toggleCollapsedCards = useApp((state) => state.toggleCollapsedCards);
 
   const unscheduledPumps = pumps.filter(
-    (pump) => pump.stage === "NOT STARTED" || pump.stage === "FABRICATION"
+    (pump) => pump.stage === "UNSCHEDULED"
   );
 
   return (
-    <aside className="flex h-full w-[280px] flex-col border-r border-border bg-card">
+    <aside
+      className="flex h-full w-[280px] flex-col border-r border-border bg-card"
+      data-testid="scheduling-sidebar"
+    >
       <header className="flex items-center justify-between border-b border-border px-4 py-3">
         <h3 className="text-sm font-semibold text-foreground">Unscheduled Jobs</h3>
         <Button
@@ -34,7 +37,7 @@ export function SchedulingSidebar() {
           ))}
           {unscheduledPumps.length === 0 && (
             <div className="rounded-lg border border-dashed border-border px-3 py-6 text-center text-xs text-muted-foreground">
-              All jobs are scheduled
+              All pumps scheduled—nice!
             </div>
           )}
         </div>

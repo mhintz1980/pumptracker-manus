@@ -18,7 +18,7 @@ interface DashboardProps {
 export const Dashboard: React.FC<DashboardProps> = ({ pumps, onSelectPump }) => {
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="dashboard-view">
       {/* KPI Strip */}
       <KpiStrip pumps={pumps} />
 
