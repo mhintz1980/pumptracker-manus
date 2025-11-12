@@ -42,7 +42,7 @@ function App() {
               Loading...
             </div>
           ) : (
-            <SchedulingView />
+            <SchedulingView pumps={filteredPumps} />
           )}
         </div>
       </AppShell>

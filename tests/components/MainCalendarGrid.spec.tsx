@@ -28,10 +28,7 @@ const mockGetModelLeadTimes = vi.fn().mockReturnValue({
 });
 
 vi.mock("../../src/store", () => {
-  const mockUseApp: any = (selector?: (state: any) => unknown) => {
-    const state = { pumps };
-    return selector ? selector(state) : state;
-  };
+  const mockUseApp: any = () => ({ filters: {} });
   mockUseApp.getState = () => ({ getModelLeadTimes: mockGetModelLeadTimes });
   return { useApp: mockUseApp };
 });
@@ -46,11 +43,14 @@ describe("MainCalendarGrid", () => {
     vi.useRealTimers();
   });
 
-  it("renders events with stage labels", () => {
+  it("renders segmented events for scheduled pumps", () => {
     const handleClick = vi.fn();
-    render(<MainCalendarGrid onEventClick={handleClick} />);
+    render(<MainCalendarGrid pumps={pumps} onEventClick={handleClick} />);
 
-    expect(screen.getAllByText(/DD-6/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Fabrication/i).length).toBeGreaterThan(0);
+    const events = screen.getAllByTestId("calendar-event");
+    expect(events.length).toBeGreaterThan(1);
+    const stages = events.map((node) => node.getAttribute("data-stage"));
+    expect(stages).toContain("FABRICATION");
+    expect(stages).toContain("POWDER COAT");
   });
 });
