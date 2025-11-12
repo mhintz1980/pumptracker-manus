@@ -1,14 +1,13 @@
 // src/components/scheduling/MainCalendarGrid.tsx
 import { useMemo } from "react";
 import { useDroppable } from "@dnd-kit/core";
-import { addDays, format, startOfDay, startOfWeek } from "date-fns";
+import { addDays, differenceInCalendarDays, format, startOfDay, startOfWeek } from "date-fns";
 import { cn } from "../../lib/utils";
-import type { Pump } from "../../types";
+import type { Pump, Stage } from "../../types";
 import { CalendarEvent } from "./CalendarEvent";
 import {
   buildStageTimeline,
   type CalendarStageEvent,
-  projectSegmentsToWeek,
   type StageBlock,
 } from "../../lib/schedule";
 import { useApp } from "../../store";
@@ -20,6 +19,40 @@ interface MainCalendarGridProps {
 
 const weeks = 4;
 const daysInView = weeks * 7;
+
+interface WeekSegment {
+  stage: Stage;
+  startDate: Date;
+  endDate: Date;
+  startCol: number;
+  span: number;
+}
+
+function projectSegmentsToWeek(blocks: StageBlock[], weekStart: Date, daysInWeek = 7): WeekSegment[] {
+  const weekEnd = addDays(weekStart, daysInWeek);
+
+  return blocks.reduce<WeekSegment[]>((segments, block) => {
+    if (block.end <= weekStart || block.start >= weekEnd) {
+      return segments;
+    }
+
+    const clampedStart = block.start < weekStart ? weekStart : block.start;
+    const clampedEnd = block.end > weekEnd ? weekEnd : block.end;
+    const startCol = Math.max(0, differenceInCalendarDays(clampedStart, weekStart));
+    const endCol = Math.max(startCol + 1, differenceInCalendarDays(clampedEnd, weekStart));
+    const span = Math.max(1, endCol - startCol);
+
+    segments.push({
+      stage: block.stage,
+      startDate: clampedStart,
+      endDate: clampedEnd,
+      startCol,
+      span,
+    });
+
+    return segments;
+  }, []);
+}
 
 export function MainCalendarGrid({ pumps, onEventClick }: MainCalendarGridProps) {
   const { getModelLeadTimes } = useApp.getState();
@@ -122,7 +155,7 @@ export function MainCalendarGrid({ pumps, onEventClick }: MainCalendarGridProps)
                       }
                       return { pump, segments };
                     })
-                    .filter((row): row is { pump: typeof pumps[number]; segments: ReturnType<typeof projectSegmentsToWeek> } => Boolean(row))
+                    .filter((row): row is { pump: typeof pumps[number]; segments: WeekSegment[] } => Boolean(row))
                     .map(({ pump, segments }, rowIdx) => {
                       return (
                         <div
