@@ -1,47 +1,60 @@
 // src/components/scheduling/MainCalendarGrid.tsx
 import { useMemo } from "react";
 import { useDroppable } from "@dnd-kit/core";
-import { addDays, format, startOfDay, startOfWeek } from "date-fns";
+import { addDays, differenceInCalendarDays, format, startOfDay, startOfWeek } from "date-fns";
 import { cn } from "../../lib/utils";
-import { useApp } from "../../store";
+import type { Pump, Stage } from "../../types";
 import { CalendarEvent } from "./CalendarEvent";
 import {
-  buildCalendarEvents,
+  buildStageTimeline,
   type CalendarStageEvent,
+  type StageBlock,
 } from "../../lib/schedule";
-import type { Stage } from "../../types";
+import { useApp } from "../../store";
 
 interface MainCalendarGridProps {
+  pumps: Pump[];
   onEventClick: (event: CalendarStageEvent) => void;
 }
-
-const STAGE_LABELS: Record<Stage, string> = {
-  "UNSCHEDULED": "Unscheduled",
-  "NOT STARTED": "Not Started",
-  FABRICATION: "Fabrication",
-  "POWDER COAT": "Powder Coat",
-  ASSEMBLY: "Assembly",
-  TESTING: "Testing",
-  SHIPPING: "Shipping",
-  CLOSED: "Closed",
-};
-
-const STAGE_COLORS: Record<Stage, string> = {
-  "UNSCHEDULED": "bg-gradient-to-r from-gray-500/40 to-gray-400/30",
-  "NOT STARTED": "bg-gradient-to-r from-slate-500/40 to-slate-400/30",
-  FABRICATION: "bg-gradient-to-r from-blue-500/70 to-sky-400/70",
-  "POWDER COAT": "bg-gradient-to-r from-purple-500/70 to-fuchsia-400/70",
-  ASSEMBLY: "bg-gradient-to-r from-amber-500/70 to-orange-400/70",
-  TESTING: "bg-gradient-to-r from-rose-500/70 to-orange-400/70",
-  SHIPPING: "bg-gradient-to-r from-emerald-500/70 to-lime-400/70",
-  CLOSED: "bg-gradient-to-r from-cyan-500/70 to-blue-400/70",
-};
 
 const weeks = 4;
 const daysInView = weeks * 7;
 
-export function MainCalendarGrid({ onEventClick }: MainCalendarGridProps) {
-  const pumps = useApp((state) => state.pumps);
+interface WeekSegment {
+  stage: Stage;
+  startDate: Date;
+  endDate: Date;
+  startCol: number;
+  span: number;
+}
+
+function projectSegmentsToWeek(blocks: StageBlock[], weekStart: Date, daysInWeek = 7): WeekSegment[] {
+  const weekEnd = addDays(weekStart, daysInWeek);
+
+  return blocks.reduce<WeekSegment[]>((segments, block) => {
+    if (block.end <= weekStart || block.start >= weekEnd) {
+      return segments;
+    }
+
+    const clampedStart = block.start < weekStart ? weekStart : block.start;
+    const clampedEnd = block.end > weekEnd ? weekEnd : block.end;
+    const startCol = Math.max(0, differenceInCalendarDays(clampedStart, weekStart));
+    const endCol = Math.max(startCol + 1, differenceInCalendarDays(clampedEnd, weekStart));
+    const span = Math.max(1, endCol - startCol);
+
+    segments.push({
+      stage: block.stage,
+      startDate: clampedStart,
+      endDate: clampedEnd,
+      startCol,
+      span,
+    });
+
+    return segments;
+  }, []);
+}
+
+export function MainCalendarGrid({ pumps, onEventClick }: MainCalendarGridProps) {
   const { getModelLeadTimes } = useApp.getState();
 
   const today = useMemo(() => startOfDay(new Date()), []);
@@ -55,16 +68,35 @@ export function MainCalendarGrid({ onEventClick }: MainCalendarGridProps) {
     [viewStart]
   );
 
-  const events = useMemo(
-    () =>
-      buildCalendarEvents({
-        pumps,
-        viewStart,
-        days: daysInView,
-        leadTimeLookup: getModelLeadTimes,
-      }),
-    [pumps, viewStart, getModelLeadTimes]
-  );
+  const pumpTimelines = useMemo(() => {
+    return pumps
+      .map((pump) => {
+        if (!pump.scheduledStart) {
+          return null;
+        }
+        const leadTimes = getModelLeadTimes(pump.model);
+        if (!leadTimes) {
+          return null;
+        }
+        const timeline = buildStageTimeline(pump, leadTimes, {
+import { addDays, differenceInCalendarDays, format, isValid, parse, startOfDay, startOfWeek } from "date-fns";
+
+...
+
+        const parsedStart = parse(pump.scheduledStart, "yyyy-MM-dd", new Date());
+        if (!isValid(parsedStart)) {
+          return null;
+        }
+        const timeline = buildStageTimeline(pump, leadTimes, {
+          startDate: startOfDay(parsedStart),
+        });
+        if (!timeline.length) {
+          return null;
+        }
+        return { pump, timeline };
+      })
+      .filter((entry): entry is { pump: typeof pumps[number]; timeline: StageBlock[] } => Boolean(entry));
+  }, [pumps, getModelLeadTimes]);
 
   const DroppableCell = ({ date }: { date: Date }) => {
     const dateId = format(date, "yyyy-MM-dd");
@@ -123,33 +155,53 @@ export function MainCalendarGrid({ onEventClick }: MainCalendarGridProps) {
                 </div>
 
                 <div className="relative grid grid-cols-7 gap-y-1 p-2" style={{ gridAutoRows: '32px' }}>
-                  {events
-                    .filter((event) => event.week === weekIndex)
-                    .map((event) => (
-                      <div
-                        key={event.id}
-                        className="col-start-1 col-span-7"
-                        style={{
-                          gridRow: event.row,
-                          display: 'grid',
-                          gridTemplateColumns: 'repeat(7, 1fr)',
-                        }}
-                      >
-                        <CalendarEvent
-                          title={event.title}
-                          subtitle={event.subtitle}
-                          stageLabel={STAGE_LABELS[event.stage]}
-                          colorClass={
-                            STAGE_COLORS[event.stage] ?? "bg-gradient-to-r from-slate-500/40 to-slate-400/30"
-                          }
-                          startCol={event.startDay}
-                          span={event.span}
-                          pumpId={event.pumpId}
-                          stage={event.stage}
-                          onClick={() => onEventClick(event)}
-                        />
-                      </div>
-                    ))}
+                  {pumpTimelines
+                    .map(({ pump, timeline }) => {
+                      const weekStartDate = addDays(viewStart, weekIndex * 7);
+                      const segments = projectSegmentsToWeek(timeline, weekStartDate);
+                      if (!segments.length) {
+                        return null;
+                      }
+                      return { pump, segments };
+                    })
+                    .filter((row): row is { pump: typeof pumps[number]; segments: WeekSegment[] } => Boolean(row))
+                    .map(({ pump, segments }, rowIdx) => {
+                      return (
+                        <div
+                          key={`${pump.id}-${weekIndex}`}
+                          className="col-start-1 col-span-7"
+                          style={{
+                            gridRow: rowIdx + 1,
+                            display: "grid",
+                            gridTemplateColumns: "repeat(7, 1fr)",
+                          }}
+                        >
+                          {segments.map((segment, segIdx) => {
+                            const event: CalendarStageEvent = {
+                              id: `${pump.id}-${segment.stage}-${weekIndex}-${segIdx}`,
+                              pumpId: pump.id,
+                              stage: segment.stage,
+                              title: pump.model,
+                              subtitle: pump.po,
+                              week: weekIndex,
+                              startDay: segment.startCol,
+                              span: segment.span,
+                              row: rowIdx,
+                              startDate: segment.startDate,
+                              endDate: segment.endDate,
+                            };
+
+                            return (
+                              <CalendarEvent
+                                key={event.id}
+                                event={event}
+                                onClick={onEventClick}
+                              />
+                            );
+                          })}
+                        </div>
+                      );
+                    })}
                 </div>
               </div>
             </div>

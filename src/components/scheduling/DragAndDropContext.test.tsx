@@ -1,4 +1,5 @@
 import { render } from "@testing-library/react";
+import { startOfDay } from "date-fns";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { DragAndDropContext } from "./DragAndDropContext";
 import { useApp } from "../../store";
@@ -35,6 +36,7 @@ describe("DragAndDropContext", () => {
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     useApp.setState((state) => ({ ...state, pumps: [] }));
     vi.restoreAllMocks();
     vi.useRealTimers();

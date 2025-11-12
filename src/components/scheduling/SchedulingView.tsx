@@ -1,18 +1,18 @@
 // src/components/scheduling/SchedulingView.tsx
-import { useEffect, useState } from "react";
-import { useApp } from "../../store";
+import { useState } from "react";
 import { SchedulingSidebar } from "./SchedulingSidebar";
 import { DragAndDropContext } from "./DragAndDropContext";
 import { CalendarHeader } from "./CalendarHeader";
 import { MainCalendarGrid } from "./MainCalendarGrid";
 import { EventDetailPanel } from "./EventDetailPanel";
 import type { CalendarStageEvent } from "../../lib/schedule";
+import type { Pump } from "../../types";
 
-export function SchedulingView() {
-  const { pumps } = useApp();
-  useEffect(() => {
-    console.log('pumps in SchedulingView:', pumps);
-  }, [pumps]);
+interface SchedulingViewProps {
+  pumps: Pump[];
+}
+
+export function SchedulingView({ pumps }: SchedulingViewProps) {
   const [selectedEvent, setSelectedEvent] = useState<CalendarStageEvent | null>(null);
 
   const handleEventClick = (event: CalendarStageEvent) => {
@@ -25,7 +25,7 @@ export function SchedulingView() {
         <CalendarHeader />
         <div className="flex flex-1 overflow-hidden">
           <SchedulingSidebar />
-          <MainCalendarGrid onEventClick={handleEventClick} />
+          <MainCalendarGrid pumps={pumps} onEventClick={handleEventClick} />
           {selectedEvent && (
             <EventDetailPanel event={selectedEvent} onClose={() => setSelectedEvent(null)} />
           )}
