@@ -79,7 +79,16 @@ export function MainCalendarGrid({ pumps, onEventClick }: MainCalendarGridProps)
           return null;
         }
         const timeline = buildStageTimeline(pump, leadTimes, {
-          startDate: startOfDay(new Date(pump.scheduledStart)),
+import { addDays, differenceInCalendarDays, format, isValid, parse, startOfDay, startOfWeek } from "date-fns";
+
+...
+
+        const parsedStart = parse(pump.scheduledStart, "yyyy-MM-dd", new Date());
+        if (!isValid(parsedStart)) {
+          return null;
+        }
+        const timeline = buildStageTimeline(pump, leadTimes, {
+          startDate: startOfDay(parsedStart),
         });
         if (!timeline.length) {
           return null;
