@@ -1,7 +1,7 @@
 // src/components/scheduling/MainCalendarGrid.tsx
 import { useMemo } from "react";
 import { useDroppable } from "@dnd-kit/core";
-import { addDays, differenceInCalendarDays, format, startOfDay, startOfWeek } from "date-fns";
+import { addDays, differenceInCalendarDays, format, isValid, parse, startOfDay, startOfWeek } from "date-fns";
 import { cn } from "../../lib/utils";
 import type { Pump, Stage } from "../../types";
 import { CalendarEvent } from "./CalendarEvent";
@@ -74,25 +74,27 @@ export function MainCalendarGrid({ pumps, onEventClick }: MainCalendarGridProps)
         if (!pump.scheduledStart) {
           return null;
         }
+
+        const parsedStart = pump.scheduledStart.includes("T")
+          ? new Date(pump.scheduledStart)
+          : parse(pump.scheduledStart, "yyyy-MM-dd", new Date());
+        if (!isValid(parsedStart)) {
+          return null;
+        }
+
         const leadTimes = getModelLeadTimes(pump.model);
         if (!leadTimes) {
           return null;
         }
-        const timeline = buildStageTimeline(pump, leadTimes, {
-import { addDays, differenceInCalendarDays, format, isValid, parse, startOfDay, startOfWeek } from "date-fns";
 
-...
-
-        const parsedStart = parse(pump.scheduledStart, "yyyy-MM-dd", new Date());
-        if (!isValid(parsedStart)) {
-          return null;
-        }
         const timeline = buildStageTimeline(pump, leadTimes, {
           startDate: startOfDay(parsedStart),
         });
+
         if (!timeline.length) {
           return null;
         }
+
         return { pump, timeline };
       })
       .filter((entry): entry is { pump: typeof pumps[number]; timeline: StageBlock[] } => Boolean(entry));
