@@ -17,6 +17,17 @@ function genSerial(existing: Pump[]): number {
   return Math.floor(1000 + Math.random() * 9000);
 }
 
+const DEFAULT_WIP_LIMITS: Record<Stage, number | null> = {
+  "UNSCHEDULED": null,
+  "NOT STARTED": 12,
+  FABRICATION: 8,
+  "POWDER COAT": 6,
+  ASSEMBLY: 8,
+  TESTING: 5,
+  SHIPPING: 4,
+  CLOSED: null,
+};
+
 function applyFilters(rows: Pump[], f: Filters): Pump[] {
   const q = f.q?.toLowerCase();
   return rows.filter(r => {
@@ -42,12 +53,15 @@ function applyFilters(rows: Pump[], f: Filters): Pump[] {
 
 // --- Store Definition ---
 
+export type SortKey = "priority" | "model" | "customer" | "po" | "last_update";
+
 interface AppState {
   pumps: Pump[];
   filters: Filters;
   collapsedStages: Record<Stage, boolean>;
   collapsedCards: boolean;
   wipLimits: Record<Stage, number | null>;
+  sortKey: SortKey;
   adapter: DataAdapter;
   loading: boolean;
   
@@ -65,6 +79,7 @@ interface AppState {
   toggleStageCollapse: (stage: Stage) => void;
   toggleCollapsedCards: () => void;
   setWipLimit: (stage: Stage, limit: number | null) => void;
+  setSortKey: (key: SortKey) => void;
 
   // selectors
   filtered: () => Pump[];
@@ -82,16 +97,8 @@ export const useApp = create<AppState>()(
         ASSEMBLY: false, TESTING: false, SHIPPING: false, CLOSED: false
       } as Record<Stage, boolean>,
       collapsedCards: false,
-      wipLimits: {
-        "UNSCHEDULED": null, // No limit for unscheduled queue
-        "NOT STARTED": 12,
-        FABRICATION: 8,
-        "POWDER COAT": 6,
-        ASSEMBLY: 8,
-        TESTING: 5,
-        SHIPPING: 4,
-        CLOSED: null,
-      },
+      wipLimits: { ...DEFAULT_WIP_LIMITS },
+      sortKey: "priority",
       adapter: LocalAdapter, // Default to LocalAdapter
       loading: true,
       
@@ -172,6 +179,7 @@ export const useApp = create<AppState>()(
           }
         }));
       },
+      setSortKey: (key) => set({ sortKey: key }),
 
       schedulePump: (id: string, dropDate: string) => {
         const { pumps, getModelLeadTimes } = get();
@@ -223,7 +231,10 @@ export const useApp = create<AppState>()(
         collapsedStages: state.collapsedStages,
         collapsedCards: state.collapsedCards,
         wipLimits: state.wipLimits,
+        sortKey: state.sortKey,
       }),
     }
   )
 );
+
+export { DEFAULT_WIP_LIMITS };

@@ -3,7 +3,7 @@
 ## Project Overview
 **Objective**: Migrate pumptracker app from mock random data generation to deterministic catalog-driven data using JSON catalog source.
 
-**Project Root**: `/home/markimus/projects/pumptracker-variants/pumptracker-manus/`
+**Project Root**: `pumptracker-manus/` (repository root)
 **Date Completed**: November 2, 2025
 **Status**: ✅ Successfully implemented and deployed
 

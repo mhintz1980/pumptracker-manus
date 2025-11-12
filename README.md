@@ -19,6 +19,8 @@ PumpTracker Lite is a lightweight yet powerful web application designed to help 
 ### Kanban Board View
 - **8-Stage Production Pipeline**: UNSCHEDULED → NOT STARTED → FABRICATION → POWDER COAT → ASSEMBLY → TESTING → SHIPPING → CLOSED
 - **Drag-and-Drop Interface**: Move pumps between stages with intuitive drag-and-drop functionality
+- **Sorting Controls**: Inline “Sort by” selector (Priority, Model, Customer, PO, Last Update) instantly reorders every stage
+- **WIP Limit Management**: Per-stage caps displayed as `count / limit`, with inline editor to adjust limits without leaving the board
 - **Smart Card Display**: Each pump card shows essential information including:
   - Model and Serial Number
   - PO Number and Customer
@@ -26,6 +28,7 @@ PumpTracker Lite is a lightweight yet powerful web application designed to help 
   - Scheduled End Date
   - Priority Badge (Low, Normal, High, Rush, Urgent)
   - Color-Coded Priority Indicators
+- **Capacity Signals**: Stage headers glow when limits are exceeded and display rolling average dwell time for active work-in-progress
 
 ### Scheduling View
 - **Unscheduled Queue**: Sidebar showing all pumps in "UNSCHEDULED" stage ready for scheduling
@@ -44,6 +47,7 @@ PumpTracker Lite is a lightweight yet powerful web application designed to help 
 - **Add PO Modal**: Create new purchase orders with multi-line item support
 - **Bulk CSV Import**: Upload pump data from CSV files
 - **Local Storage**: Automatic data persistence in browser
+- **WIP Limit Editor**: Adjustable caps stored in local persistence so each team can tune throughput targets on the fly
 - **Mock Data**: Pre-populated with 80 realistic pump orders for demonstration
 
 ## 🏗️ Architecture

@@ -12,10 +12,10 @@
 
 
 ### Complete Drag~Drop Scheduling
-- Finish the drop handler to schedule unscheduled pumps
-- Implement drag~to~reschedule for already~scheduled jobs
-- Add visual feedback during drag operations
-- Handle job rollover when spans exceed week boundaries
+- ✅ Drag handler now schedules unscheduled pumps directly into NOT STARTED with model-aware lead times
+- ⬜ Implement drag~to~reschedule for already~scheduled jobs
+- ✅ Visual feedback (highlighted drop cells, scheduling toasts)
+- ⬜ Handle job rollover when spans exceed week boundaries
 
 
 ### Add CRUD Operations
@@ -33,13 +33,13 @@
 
 ### Conflict Detection & Validation
 - Prevent double~booking resources
-- Capacity warnings when overloading weeks
+- ✅ Capacity warnings via per-stage WIP limit glow + inline count/limit display
 - Promise date vs scheduled date alerts
 - Color~code overdue or at~risk jobs
 
 
 ### Search & Advanced Filtering
-- Global search across pumps, POs, customers
+- ✅ Global search across pumps, POs, customers
 - Date range filters on scheduling page
 - Multi~select filters (priorities, stages, colors)
 - Save filter presets

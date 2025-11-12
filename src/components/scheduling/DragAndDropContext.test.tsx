@@ -3,6 +3,7 @@ import { startOfDay } from "date-fns";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { DragAndDropContext } from "./DragAndDropContext";
 import { useApp } from "../../store";
+import { startOfDay } from "date-fns";
 
 const handlers: { onDragEnd?: (event: any) => void } = {};
 
@@ -38,10 +39,11 @@ describe("DragAndDropContext", () => {
     vi.useRealTimers();
     useApp.setState((state) => ({ ...state, pumps: [] }));
     vi.restoreAllMocks();
+    vi.useRealTimers();
   });
 
-  it("updates the pump when an unscheduled card is dropped on a date", () => {
-    const schedulePumpSpy = vi.spyOn(useApp.getState(), "schedulePump");
+  it("schedules the pump when a card is dropped on a valid date", () => {
+    const scheduleSpy = vi.spyOn(useApp.getState(), "schedulePump");
 
     render(
       <DragAndDropContext>
@@ -56,7 +58,8 @@ describe("DragAndDropContext", () => {
       over: { id: "2024-01-10" },
     });
 
-    const expectedDate = startOfDay(new Date("2024-01-10T00:00:00.000Z")).toISOString().split("T")[0];
-    expect(schedulePumpSpy).toHaveBeenCalledWith(pump.id, expectedDate);
+    const expectedIso = startOfDay(new Date("2024-01-10")).toISOString().split("T")[0];
+
+    expect(scheduleSpy).toHaveBeenCalledWith(pump.id, expectedIso);
   });
 });
