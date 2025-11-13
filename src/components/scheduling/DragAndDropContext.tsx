@@ -6,7 +6,7 @@ import { UnscheduledJobCard } from "./UnscheduledJobCard";
 import { Pump } from "../../types";
 import { deriveScheduleWindow, isValidScheduleDate } from "../../lib/schedule";
 import { toast } from "sonner";
-import { startOfDay } from "date-fns";
+import { startOfDay, format, parse } from "date-fns";
 
 interface DragAndDropContextProps {
   children: React.ReactNode;
@@ -60,14 +60,14 @@ export function DragAndDropContext({ children }: DragAndDropContextProps) {
       return;
     }
 
-    const dropDate = startOfDay(new Date(targetDate));
+    const dropDate = startOfDay(parse(targetDate, "yyyy-MM-dd", new Date()));
     if (!isValidScheduleDate(dropDate)) {
       toast.error("Choose a future date to schedule this pump.");
       setActiveId(null);
       return;
     }
 
-    schedulePump(pump.id, dropDate.toISOString().split('T')[0]);
+    schedulePump(pump.id, format(dropDate, "yyyy-MM-dd"));
 
     toast.success(`Scheduled ${pump.model} starting on ${dropDate.toLocaleDateString()}`);
 

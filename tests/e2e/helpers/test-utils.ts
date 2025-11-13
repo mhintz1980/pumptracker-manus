@@ -21,7 +21,7 @@ export class SchedulingPageHelper {
 
   // Component getters
   getUnscheduledJobs(): Locator {
-    return this.page.locator('[data-testid="scheduling-sidebar"] [data-pump-id]');
+    return this.page.locator('[data-testid="backlog-dock"] [data-pump-id]');
   }
 
   getCalendarCells(): Locator {
@@ -37,7 +37,7 @@ export class SchedulingPageHelper {
   }
 
   getSchedulingSidebar(): Locator {
-    return this.page.locator('[data-testid="scheduling-sidebar"]');
+    return this.page.locator('[data-testid="backlog-dock"]');
   }
 
   getMainCalendarGrid(): Locator {

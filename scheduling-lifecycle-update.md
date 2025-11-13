@@ -34,7 +34,7 @@ If that feels too busy, we can instead render a badge at the top of the calendar
 Once the lifecycle changes land, the current Playwright suite will need adjustments so it mirrors the new behavior instead of assuming cards hang around.  
 
 The drag-and-drop tests in `tests/e2e/scheduling.spec.ts` should now assert that the sidebar no longer contains that pump  
-(`page.locator('[data-testid="scheduling-sidebar"]').locator([data-pump-id="${pumpId}"]) → expect hidden`)  
+(`page.locator('[data-testid="backlog-dock"]').locator([data-pump-id="${pumpId}"]) → expect hidden`)  
 while verifying the calendar event exists and stage advanced to **"NOT STARTED"** (we can expose the stage via `data-stage` on calendar events).
 
 Helper utilities in `tests/e2e/helpers/test-utils.ts` will pivot to the `[data-testid]` hooks we discussed, and `Assertions.expectJobToBeMoved` will assert `stage !== "UNSCHEDULED"` rather than relying on `data-scheduled-state`.

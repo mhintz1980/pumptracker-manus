@@ -27,7 +27,7 @@ test.describe('Scheduling Functionality', () => {
 
   test('component visibility test', async ({ page }) => {
     // Verify sidebar is present
-    const sidebar = page.locator('[data-testid="scheduling-sidebar"]');
+    const sidebar = page.locator('[data-testid="backlog-dock"]');
     await expect(sidebar).toBeVisible();
 
     // Verify unscheduled jobs section
@@ -80,7 +80,7 @@ test.describe('Scheduling Functionality', () => {
 
     // Verify the job has been moved from UNSCHEDULED to NOT STARTED
     // Check that the pump is no longer in the unscheduled sidebar
-    const sidebarPump = page.locator('[data-testid="scheduling-sidebar"] [data-pump-id="${pumpId}"]');
+    const sidebarPump = page.locator('[data-testid="backlog-dock"] [data-pump-id="${pumpId}"]');
     await expect(sidebarPump).not.toBeVisible({ timeout: 7000 });
 
     // Verify the pump now appears on the calendar with NOT STARTED stage
@@ -168,7 +168,7 @@ test.describe('Scheduling Functionality', () => {
 
       // Verify the scheduled state persisted after refresh
       // The pump should no longer be in the unscheduled sidebar
-      const sidebarPump = page.locator('[data-testid="scheduling-sidebar"] [data-pump-id="${pumpId}"]');
+      const sidebarPump = page.locator('[data-testid="backlog-dock"] [data-pump-id="${pumpId}"]');
       await expect(sidebarPump).not.toBeVisible();
 
       // The pump should appear on calendar with NOT STARTED stage
@@ -229,7 +229,7 @@ test.describe('Scheduling Functionality', () => {
     // Test desktop view
     await page.setViewportSize({ width: 1200, height: 800 });
 
-    const sidebar = page.locator('[data-testid="scheduling-sidebar"]');
+    const sidebar = page.locator('[data-testid="backlog-dock"]');
     await expect(sidebar).toBeVisible();
 
     // Test tablet view

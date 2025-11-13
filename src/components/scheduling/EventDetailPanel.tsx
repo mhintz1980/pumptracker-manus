@@ -16,59 +16,84 @@ export function EventDetailPanel({ event, onClose }: EventDetailPanelProps) {
   if (!event) return null;
 
   const stageLabel = STAGE_LABELS[event.stage] ?? event.stage;
-  const dateRange = `${format(event.startDate, "MMM d")} → ${format(event.endDate, "MMM d")}`;
+  const dateRange = `${format(event.startDate, "MMM d")} → ${format(
+    event.endDate,
+    "MMM d"
+  )}`;
 
   return (
     <div
-      className="w-[320px] border-l border-white/10 bg-[hsl(var(--surface-200)_/_0.85)] backdrop-blur px-5 py-6 flex flex-col justify-between event-detail-panel"
+      className="flex w-[320px] flex-col justify-between border-l border-white/10 bg-black/40 px-5 py-6 backdrop-blur-xl"
       data-testid="event-detail-panel"
     >
       <div>
-        <div className="flex items-start justify-between mb-5">
-          <h3 className="text-lg font-semibold text-white">
-            {event.title}
-            <span className="block text-sm font-normal text-white/70">{event.subtitle}</span>
-          </h3>
-          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full border border-white/10" onClick={onClose}>
+        <div className="mb-5 flex items-start justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-white">{event.title}</h3>
+            <p className="text-sm text-white/70">PO {event.subtitle}</p>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 rounded-full border border-white/10"
+            onClick={onClose}
+          >
             <X className="h-4 w-4" />
           </Button>
         </div>
 
-        <div className="space-y-5 text-sm">
+        <div className="space-y-5 text-sm text-white/80">
+          {event.customer && (
+            <div>
+              <div className="text-[11px] uppercase tracking-[0.3em] text-white/50">
+                Customer
+              </div>
+              <p className="text-base text-white">{event.customer}</p>
+            </div>
+          )}
+
           <div>
-            <div className="text-foreground/60 mb-1 uppercase tracking-[0.2em] text-[11px]">Stage</div>
-            <Badge variant="outline" className="gap-2 border-white/10 text-white/80">
+            <div className="text-[11px] uppercase tracking-[0.3em] text-white/50">
+              Stage
+            </div>
+            <Badge
+              variant="outline"
+              className={cn(
+                STAGE_COLORS[event.stage] ?? "bg-slate-500/40",
+                "border-none text-white"
+              )}
+            >
               {stageLabel}
             </Badge>
           </div>
 
           <div>
-            <div className="text-foreground/60 mb-1 uppercase tracking-[0.2em] text-[11px]">Window</div>
-            <div className="font-medium text-white">{dateRange}</div>
-          </div>
-
-          <div>
-            <div className="text-foreground/60 mb-1 uppercase tracking-[0.2em] text-[11px]">Calendar</div>
-            <Badge
-              className={cn(STAGE_COLORS[event.stage] ?? "bg-slate-500/40", "border-none shadow-soft text-white")}
-              variant="outline"
-            >
-              Production Schedule
-            </Badge>
-          </div>
-
-          <div>
-            <div className="text-foreground/60 mb-1 uppercase tracking-[0.2em] text-[11px]">Notes</div>
-            <div className="text-foreground/80 leading-relaxed">
-              {`Planned duration: ${event.span} day(s). Drag pumps to adjust this stage on the schedule.`}
+            <div className="text-[11px] uppercase tracking-[0.3em] text-white/50">
+              Window
             </div>
+            <p className="font-medium text-white">{dateRange}</p>
           </div>
+
+          {event.priority && (
+            <div>
+              <div className="text-[11px] uppercase tracking-[0.3em] text-white/50">
+                Priority
+              </div>
+              <Badge className="border-none bg-white/10 text-white">
+                {event.priority}
+              </Badge>
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 border-t border-white/10 pt-4">
-        <Button variant="outline" className="rounded-full">Adjust</Button>
-        <Button variant="destructive" className="rounded-full">Clear</Button>
+      <div className="mt-4 flex justify-end gap-2 border-t border-white/10 pt-4">
+        <Button variant="outline" className="rounded-full">
+          Adjust
+        </Button>
+        <Button variant="destructive" className="rounded-full">
+          Clear
+        </Button>
       </div>
     </div>
   );

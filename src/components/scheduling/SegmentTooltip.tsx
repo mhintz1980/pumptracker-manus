@@ -6,7 +6,6 @@ import { Tooltip } from "../ui/Tooltip";
 import { STAGE_COLORS, STAGE_LABELS } from "../../lib/stage-constants";
 import type { CalendarStageEvent } from "../../lib/schedule";
 import type { StageSegment } from "../../lib/schedule";
-import type { Stage } from "../../types";
 
 interface SegmentTooltipProps {
   event: CalendarStageEvent;

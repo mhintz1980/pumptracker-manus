@@ -1,62 +1,131 @@
-import { BarChart3, Calendar, Layout, Package } from "lucide-react";
+import { Filter, Moon, Package, Search, Sun } from "lucide-react";
+import { useMemo, useState } from "react";
 import { Button } from "../ui/Button";
+import { Input } from "../ui/Input";
 import { cn } from "../../lib/utils";
-
-export type AppView = "dashboard" | "kanban" | "scheduling";
+import { useTheme } from "../../hooks/useTheme";
+import { ControlFlyout } from "./ControlFlyout";
+import { useApp } from "../../store";
+import { AddPoButton } from "../toolbar/AddPoButton";
+import { CollapseToggle } from "./CollapseToggle";
+import { NAV_ITEMS, type AppView } from "./navigation";
 
 interface HeaderProps {
   currentView: AppView;
   onChangeView: (view: AppView) => void;
+  onOpenAddPo: () => void;
 }
 
-const NAV_ITEMS: Array<{
-  id: AppView;
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-}> = [
-  { id: "dashboard", label: "Dashboard", icon: BarChart3 },
-  { id: "kanban", label: "Kanban", icon: Layout },
-  { id: "scheduling", label: "Scheduling", icon: Calendar },
-];
+export function Header({
+  currentView,
+  onChangeView,
+  onOpenAddPo,
+}: HeaderProps) {
+  const { mode, toggle } = useTheme();
+  const { filters, setFilters } = useApp();
+  const collapsedCards = useApp((state) => state.collapsedCards);
+  const toggleCollapsedCards = useApp((state) => state.toggleCollapsedCards);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
-export function Header({ currentView, onChangeView }: HeaderProps) {
+  const activeFilterCount = useMemo(
+    () =>
+      [
+        filters.q,
+        filters.po,
+        filters.customer,
+        filters.model,
+        filters.priority,
+        filters.stage,
+      ].filter(Boolean).length,
+    [filters]
+  );
+
   return (
-    <header className="bg-primary text-primary-foreground border-b border-primary/20 sticky top-0 z-50 shadow-layer-md">
-      <div className="container mx-auto flex h-14 items-center justify-between px-4">
-        <div className="flex items-center gap-2">
-          <div className="rounded-2xl bg-white/20 p-1.5 shadow-layer-sm">
-            <Package className="h-5 w-5" strokeWidth={2.5} />
+    <header className="sticky top-0 z-40 border-b border-white/10 bg-black/30 backdrop-blur-xl">
+      <div className="flex h-16 items-center gap-4 px-8">
+        <div className="flex min-w-[180px] items-center gap-3">
+          <div className="rounded-2xl border border-white/15 bg-white/5 p-2 shadow-layer-sm">
+            <Package className="h-5 w-5 text-white" strokeWidth={2.5} />
           </div>
-          <div>
-            <h1 className="text-lg font-semibold tracking-tight">
-              PumpTracker <span className="font-normal opacity-80">Lite</span>
-            </h1>
-            <p className="text-[10px] uppercase tracking-[0.22em] text-white/80">
-              Production Management
-            </p>
+          <div className="flex flex-col">
+            <span className="text-sm font-semibold tracking-tight text-white">
+              PumpTracker
+            </span>
+            <span className="text-[10px] uppercase tracking-[0.3em] text-white/60">
+              Flow Ops
+            </span>
           </div>
         </div>
 
-        <nav className="flex items-center gap-1.5">
-          {NAV_ITEMS.map(({ id, label, icon: Icon }) => (
-            <Button
-              key={id}
-              variant="ghost"
-              size="sm"
-              onClick={() => onChangeView(id)}
-              className={cn(
-                "h-8 rounded-full px-3 text-[11px] font-semibold transition-all shadow-sm hover:-translate-y-[1px] hover:bg-white/15 hover:shadow-md",
-                currentView === id
-                  ? "bg-white/20 text-white shadow-md"
-                  : "text-white/80"
-              )}
-            >
-              <Icon className="mr-2 h-4 w-4" />
-              {label}
-            </Button>
-          ))}
-        </nav>
+        <div className="ml-auto flex flex-1 items-center justify-end gap-3">
+          <nav className="flex items-center gap-2">
+            {NAV_ITEMS.map(({ id, label, icon: Icon }) => (
+              <Button
+                key={id}
+                variant="ghost"
+                size="icon"
+                className={cn(
+                  "h-9 w-9 rounded-full border border-white/15 bg-white/5 text-white/70 transition-all hover:bg-white/15 hover:text-white",
+                  currentView === id && "bg-white/20 text-white"
+                )}
+                onClick={() => onChangeView(id)}
+                title={label}
+                aria-label={`Go to ${label}`}
+              >
+                <Icon className="h-4 w-4" />
+              </Button>
+            ))}
+          </nav>
+
+          <div className="relative hidden items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm text-white/80 md:flex">
+            <Search className="h-3.5 w-3.5 text-white/50" />
+            <Input
+              value={filters.q || ""}
+              onChange={(event) => setFilters({ q: event.target.value })}
+              placeholder="Search"
+              className="h-7 w-32 border-none bg-transparent p-0 text-xs text-white placeholder:text-white/40 focus-visible:ring-0 focus-visible:ring-offset-0"
+            />
+          </div>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            className="relative h-9 w-9 rounded-full border border-white/15 bg-white/10 text-white hover:bg-white/20"
+            onClick={() => setFiltersOpen((open) => !open)}
+          >
+            <Filter className="h-4 w-4" />
+            {activeFilterCount > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-black">
+                {activeFilterCount}
+              </span>
+            )}
+          </Button>
+
+          <CollapseToggle
+            collapsed={collapsedCards}
+            onToggle={toggleCollapsedCards}
+          />
+
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 rounded-full border border-white/20 bg-white/10 text-white hover:bg-white/20"
+            onClick={toggle}
+            title={`Switch to ${mode === "dark" ? "light" : "dark"} mode`}
+            aria-label="Toggle theme"
+          >
+            {mode === "dark" ? (
+              <Sun className="h-4 w-4" />
+            ) : (
+              <Moon className="h-4 w-4" />
+            )}
+          </Button>
+
+          <AddPoButton onClick={onOpenAddPo} />
+        </div>
       </div>
+
+      <ControlFlyout open={filtersOpen} onClose={() => setFiltersOpen(false)} />
     </header>
   );
 }

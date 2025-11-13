@@ -2,9 +2,11 @@
 import { Pump } from "../../types";
 import { Card, CardContent } from "../ui/Card";
 import { round } from "../../lib/format";
+import { cn } from "../../lib/utils";
 
 interface KpiStripProps {
   pumps: Pump[];
+  compact?: boolean;
 }
 
 function diffDays(pump: Pump): number {
@@ -14,7 +16,7 @@ function diffDays(pump: Pump): number {
   return Math.abs((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
 }
 
-export function KpiStrip({ pumps }: KpiStripProps) {
+export function KpiStrip({ pumps, compact = false }: KpiStripProps) {
   const closed = pumps.filter(p => p.stage === "CLOSED");
   const onTime = closed.filter(p => !p.scheduledEnd || new Date(p.last_update) <= new Date(p.scheduledEnd));
   const lateOpen = pumps.filter(p => p.scheduledEnd && new Date() > new Date(p.scheduledEnd) && p.stage !== "CLOSED");
@@ -61,20 +63,38 @@ export function KpiStrip({ pumps }: KpiStripProps) {
   ];
 
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+    <div
+      className={cn(
+        "grid gap-4",
+        compact ? "grid-cols-2 lg:grid-cols-4" : "grid-cols-1 md:grid-cols-2 xl:grid-cols-4"
+      )}
+    >
       {metrics.map((metric) => (
-        <Card key={metric.label} className={`layer-l1 ${metric.bgColor} ${metric.borderColor} border-2`}>
-          <CardContent className="p-6">
+        <Card
+          key={metric.label}
+          className={cn(
+            "layer-l1 border border-white/10 bg-gradient-to-br from-card/70 via-card/30 to-card/80",
+            compact ? "p-3" : "p-0"
+          )}
+        >
+          <CardContent className={cn("p-6", compact && "p-4")}>
             <div className="space-y-2">
-              <div className="text-xs uppercase tracking-[0.25em] text-muted-foreground font-medium">
+              <div className="text-[10px] uppercase tracking-[0.35em] text-white/60">
                 {metric.label}
               </div>
-              <div className={`text-2xl font-bold ${metric.color}`}>
+              <div
+                className={cn(
+                  "text-2xl font-semibold text-white",
+                  compact && "text-xl"
+                )}
+              >
                 {metric.value}
               </div>
-              <div className="text-xs text-muted-foreground">
-                {metric.helper}
-              </div>
+              {!compact && (
+                <div className="text-xs text-muted-foreground">
+                  {metric.helper}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

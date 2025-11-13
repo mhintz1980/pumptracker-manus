@@ -2,195 +2,183 @@
 @tailwind components;
 @tailwind utilities;
 
-/* PumpTracker Lova design system port */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600&display=swap");
+
+/* PumpTracker neon layered system */
 
 @layer base {
   :root {
-    /* Base palette */
-    --background: 220 18% 97%;
+    --background: 220 17% 6%;
+    --foreground: 210 20% 94%;
+
+    --card: 220 16% 10%;
+    --card-foreground: 210 20% 94%;
+    --popover: 220 16% 10%;
+    --popover-foreground: 210 20% 94%;
+
+    --primary: 185 100% 60%;
+    --primary-foreground: 222 47% 11%;
+    --secondary: 222 18% 18%;
+    --secondary-foreground: 210 20% 94%;
+    --muted: 222 18% 15%;
+    --muted-foreground: 220 11% 65%;
+    --accent: 28 100% 56%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 84% 62%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 223 17% 20%;
+    --input: 223 17% 20%;
+    --ring: 185 100% 60%;
+
+    --radius: 0.85rem;
+
+    --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.45);
+    --shadow-md: 0 12px 40px rgba(0, 0, 0, 0.55);
+    --shadow-lg: 0 28px 80px rgba(0, 0, 0, 0.65);
+
+    --grid-color: rgba(94, 234, 212, 0.08);
+    --grid-highlight: rgba(236, 72, 153, 0.18);
+
+    --glass-bg: rgba(10, 12, 18, 0.85);
+    --glass-border: rgba(94, 234, 212, 0.25);
+
+    --chart-1: 185 100% 60%;
+    --chart-2: 28 100% 56%;
+    --chart-3: 312 85% 65%;
+    --chart-4: 142 70% 45%;
+    --chart-5: 226 73% 67%;
+  }
+
+  .light {
+    --background: 220 26% 97%;
     --foreground: 215 25% 15%;
 
-    /* Layered surfaces */
     --card: 0 0% 100%;
     --card-foreground: 215 25% 15%;
     --popover: 0 0% 100%;
     --popover-foreground: 215 25% 15%;
 
-    /* Primary + accent */
-    --primary: 207 98% 33%;
+    --primary: 213 100% 60%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 215 15% 92%;
+    --secondary: 210 32% 94%;
     --secondary-foreground: 215 25% 15%;
-    --muted: 215 20% 94%;
-    --muted-foreground: 215 15% 50%;
-    --accent: 48 100% 50%;
+    --muted: 210 28% 92%;
+    --muted-foreground: 215 15% 45%;
+    --accent: 28 100% 56%;
     --accent-foreground: 215 25% 15%;
-    --destructive: 0 84% 60%;
+    --destructive: 0 84% 56%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 215 20% 88%;
-    --input: 215 20% 88%;
-    --ring: 207 98% 33%;
+    --border: 213 32% 88%;
+    --input: 213 32% 88%;
+    --ring: 213 100% 60%;
 
-    --radius: 0.75rem;
+    --shadow-sm: 0 4px 12px rgba(15, 23, 42, 0.08);
+    --shadow-md: 0 12px 40px rgba(15, 23, 42, 0.12);
+    --shadow-lg: 0 28px 80px rgba(15, 23, 42, 0.18);
 
-    /* Shadow tokens */
-    --shadow-sm: 0 2px 12px rgba(0, 0, 0, 0.08);
-    --shadow-md: 0 8px 28px rgba(0, 0, 0, 0.12);
-    --shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.18);
+    --grid-color: rgba(15, 118, 110, 0.12);
+    --grid-highlight: rgba(236, 72, 153, 0.12);
 
-    /* Glass layers */
-    --glass-bg: rgba(255, 255, 255, 0.7);
-    --glass-border: rgba(255, 255, 255, 0.15);
-
-    /* Sidebar tokens */
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-
-    /* Chart palette */
-    --chart-1: 207 98% 33%;
-    --chart-2: 48 100% 50%;
-    --chart-3: 142 71% 45%;
-    --chart-4: 24 95% 53%;
-    --chart-5: 262 83% 58%;
+    --glass-bg: rgba(255, 255, 255, 0.78);
+    --glass-border: rgba(15, 23, 42, 0.08);
   }
 
-  .dark {
-    --background: 215 25% 12%;
-    --foreground: 215 15% 92%;
-
-    --card: 215 22% 16%;
-    --card-foreground: 215 15% 92%;
-    --popover: 215 22% 16%;
-    --popover-foreground: 215 15% 92%;
-
-    --primary: 207 98% 45%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 215 22% 20%;
-    --secondary-foreground: 215 15% 92%;
-    --muted: 215 22% 18%;
-    --muted-foreground: 215 15% 60%;
-    --accent: 48 100% 55%;
-    --accent-foreground: 215 25% 12%;
-    --destructive: 0 84% 50%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 215 22% 22%;
-    --input: 215 22% 22%;
-    --ring: 207 98% 45%;
-
-    --shadow-sm: 0 2px 12px rgba(0, 0, 0, 0.4);
-    --shadow-md: 0 8px 28px rgba(0, 0, 0, 0.5);
-    --shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.6);
-
-    --glass-bg: rgba(30, 35, 45, 0.7);
-    --glass-border: rgba(255, 255, 255, 0.05);
-
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-
-    --chart-1: 207 98% 45%;
-    --chart-2: 48 100% 55%;
-    --chart-3: 142 71% 50%;
-    --chart-4: 24 95% 60%;
-    --chart-5: 262 83% 65%;
-  }
-}
-
-@layer base {
   * {
     @apply border-border;
   }
 
-  /* Inter typography */
-  @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
-
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background-image: linear-gradient(135deg, rgba(5, 5, 10, 0.95) 0%, rgba(15, 15, 24, 0.98) 50%, rgba(5, 5, 10, 0.96) 100%);
+    min-height: 100vh;
   }
 }
 
 @layer utilities {
-  /* Elevation utilities */
-  .layer-l1 {
-    @apply bg-card rounded-xl border border-border;
-    box-shadow:
-      0 12px 32px rgba(0, 0, 0, 0.14),
-      0 4px 12px rgba(0, 0, 0, 0.1),
-      0 1px 3px rgba(0, 0, 0, 0.06);
+  .app-ambient {
+    @apply min-h-screen w-full;
+    background-image: linear-gradient(135deg, #050505 0%, #0f0f18 60%, #050505 100%);
+    position: relative;
+    overflow: hidden;
   }
 
-  .dark .layer-l1 {
-    box-shadow:
-      0 12px 32px rgba(0, 0, 0, 0.6),
-      0 4px 12px rgba(0, 0, 0, 0.5),
-      0 1px 3px rgba(0, 0, 0, 0.4);
+  .app-ambient::before {
+    content: "";
+    position: absolute;
+    inset: -50% 0 0 0;
+    background-image: radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.15), transparent 55%), radial-gradient(circle at 80% 0%, rgba(236, 72, 153, 0.15), transparent 70%);
+    opacity: 0.7;
+    filter: blur(20px);
+    pointer-events: none;
+  }
+
+  .app-ambient::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: repeating-linear-gradient(0deg, rgba(94, 234, 212, 0.05) 0, rgba(94, 234, 212, 0.05) 1px, transparent 1px, transparent 32px), repeating-linear-gradient(90deg, rgba(94, 234, 212, 0.05) 0, rgba(94, 234, 212, 0.05) 1px, transparent 1px, transparent 32px);
+    mix-blend-mode: screen;
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  .content-stage {
+    position: relative;
+    z-index: 1;
+    @apply px-6 pb-10;
+  }
+
+  .layer-glass {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(18px);
+    @apply rounded-2xl;
+    box-shadow: 0 0 25px rgba(94, 234, 212, 0.15), inset 0 0 20px rgba(236, 72, 153, 0.15);
+  }
+
+  .layer-depth {
+    @apply rounded-3xl border border-border/50;
+    background: linear-gradient(160deg, rgba(15, 18, 28, 0.95), rgba(5, 5, 10, 0.85));
+    box-shadow: var(--shadow-lg), 0 0 25px rgba(34, 211, 238, 0.2);
+  }
+
+  .layer-l1 {
+    @apply rounded-2xl border border-white/5 bg-card/90;
+    box-shadow: var(--shadow-md), 0 0 20px rgba(34, 211, 238, 0.12);
   }
 
   .layer-l2 {
-    @apply rounded-lg border;
-    background: var(--glass-bg);
-    backdrop-filter: blur(12px);
-    border-color: var(--glass-border);
-    box-shadow:
-      0 6px 20px rgba(0, 0, 0, 0.1),
-      0 2px 8px rgba(0, 0, 0, 0.08);
-    transform: translateZ(0);
-  }
-
-  .dark .layer-l2 {
-    box-shadow:
-      0 6px 20px rgba(0, 0, 0, 0.5),
-      0 2px 8px rgba(0, 0, 0, 0.4);
+    @apply rounded-2xl border border-white/10;
+    background: rgba(12, 14, 22, 0.9);
+    box-shadow: var(--shadow-md), 0 0 35px rgba(236, 72, 153, 0.15);
   }
 
   .layer-l3 {
-    @apply bg-muted/40 rounded-md border border-border/70;
-    box-shadow:
-      0 8px 24px rgba(0, 0, 0, 0.12),
-      0 3px 10px rgba(0, 0, 0, 0.09);
-  }
-
-  .dark .layer-l3 {
-    box-shadow:
-      0 8px 24px rgba(0, 0, 0, 0.55),
-      0 3px 10px rgba(0, 0, 0, 0.45);
-  }
-
-  .glass-effect {
-    background: var(--glass-bg);
-    backdrop-filter: blur(12px);
-    border: 1px solid var(--glass-border);
-  }
-
-  .shadow-layer-sm {
+    @apply rounded-xl border border-white/8 bg-secondary/60;
     box-shadow: var(--shadow-sm);
   }
 
-  .shadow-layer-md {
+  .surface-panel {
+    @apply rounded-xl border border-border/60 bg-card/90;
     box-shadow: var(--shadow-md);
   }
 
-  .shadow-layer-lg {
-    box-shadow: var(--shadow-lg);
+  .neon-hover {
+    position: relative;
+    transition: transform 140ms cubic-bezier(0.25, 0.9, 0.3, 1.2), box-shadow 140ms ease;
+  }
+
+  .neon-hover:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 0 20px rgba(94, 234, 212, 0.25);
   }
 
   .scrollbar-dark {
     scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.24) rgba(20, 24, 34, 0.4);
+    scrollbar-color: rgba(94, 234, 212, 0.4) rgba(10, 12, 18, 0.6);
   }
 
   .scrollbar-dark::-webkit-scrollbar {
@@ -199,17 +187,17 @@
   }
 
   .scrollbar-dark::-webkit-scrollbar-track {
-    background: rgba(20, 24, 34, 0.6);
+    background: rgba(10, 12, 18, 0.8);
     border-radius: 999px;
   }
 
   .scrollbar-dark::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.18);
+    background: rgba(94, 234, 212, 0.4);
     border-radius: 999px;
-    border: 1px solid rgba(20, 24, 34, 0.8);
+    border: 1px solid rgba(5, 5, 10, 0.6);
   }
 
   .scrollbar-dark::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.28);
+    background: rgba(94, 234, 212, 0.6);
   }
 }

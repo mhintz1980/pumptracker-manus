@@ -1,7 +1,6 @@
-// src/components/scheduling/CalendarEvent.tsx
 import { cn } from "../../lib/utils";
 import type { CalendarStageEvent } from "../../lib/schedule";
-import { STAGE_COLORS, STAGE_LABELS } from "../../lib/stage-constants";
+import { STAGE_LABELS } from "../../lib/stage-constants";
 
 interface CalendarEventProps {
   event: CalendarStageEvent;
@@ -9,17 +8,24 @@ interface CalendarEventProps {
   isDragging?: boolean;
 }
 
+const STATUS_COLORS = {
+  ok: "bg-cyan-500/15 text-cyan-100 border-cyan-400/50",
+  warning: "bg-amber-500/15 text-amber-100 border-amber-400/50",
+  danger: "bg-pink-500/20 text-pink-100 border-pink-400/50",
+};
+
 export function CalendarEvent({ event, onClick, isDragging = false }: CalendarEventProps) {
   const stageLabel = STAGE_LABELS[event.stage] ?? event.stage;
-  const colorClass = STAGE_COLORS[event.stage] ?? "bg-slate-500/40";
+  const idleDays = event.idleDays ?? 0;
+  const status = idleDays > 6 ? "danger" : idleDays > 3 ? "warning" : "ok";
   const handleClick = () => onClick(event);
 
   return (
     <div
       className={cn(
-        "flex h-full items-center justify-between gap-3 rounded-xl border border-white/10 px-3 py-1 text-[11px] font-semibold tracking-wide text-white shadow-soft backdrop-blur cursor-pointer transition-all duration-150",
-        colorClass,
-        isDragging && "opacity-50 border-2 border-dashed border-gray-600"
+        "group flex h-full cursor-pointer flex-col justify-between rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-white shadow-layer-sm transition-all duration-150",
+        STATUS_COLORS[status],
+        isDragging && "opacity-50 border-dashed border-white/50"
       )}
       style={{
         gridColumn: `${event.startDay + 1} / span ${event.span}`,
@@ -38,15 +44,34 @@ export function CalendarEvent({ event, onClick, isDragging = false }: CalendarEv
           handleClick();
         }
       }}
-      aria-label={`${event.title} - ${stageLabel} - ${event.subtitle ? `PO: ${event.subtitle}` : ""}`}
+      aria-label={`${event.title} - ${stageLabel} - PO ${event.subtitle}`}
     >
-      <div className="flex flex-col truncate text-left">
-        <span className="truncate text-xs font-semibold text-white">{event.title}</span>
-        {event.subtitle && (
-          <span className="truncate text-[10px] font-normal text-white/80">{event.subtitle}</span>
-        )}
+      <div className="flex items-center justify-between text-[11px] font-semibold">
+        <span className="truncate">{event.title}</span>
+        <span className="text-[10px] uppercase tracking-[0.2em] text-white/70">
+          {stageLabel}
+        </span>
       </div>
-      <span className="text-[10px] uppercase tracking-[0.18em] text-white/80">{stageLabel}</span>
+
+      <div className="mt-1 flex items-center justify-between text-[10px] text-white/80">
+        <span className="truncate">PO {event.subtitle}</span>
+        {event.customer && <span className="truncate">{event.customer}</span>}
+      </div>
+
+      <div className="mt-2 flex items-center gap-2 text-[10px]">
+        {event.priority && (
+          <span className="rounded-full border border-white/20 px-2 py-0.5 text-[9px] uppercase tracking-widest">
+            {event.priority}
+          </span>
+        )}
+        <span className="rounded-full border border-white/20 px-2 py-0.5 text-[9px] uppercase tracking-widest">
+          {status === "danger"
+            ? "Stalled"
+            : status === "warning"
+            ? "At Risk"
+            : "On Track"}
+        </span>
+      </div>
     </div>
   );
 }

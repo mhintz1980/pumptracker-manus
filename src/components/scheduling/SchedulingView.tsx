@@ -1,6 +1,5 @@
-// src/components/scheduling/SchedulingView.tsx
 import { useState } from "react";
-import { SchedulingSidebar } from "./SchedulingSidebar";
+import { BacklogDock } from "./BacklogDock";
 import { DragAndDropContext } from "./DragAndDropContext";
 import { CalendarHeader } from "./CalendarHeader";
 import { MainCalendarGrid } from "./MainCalendarGrid";
@@ -13,7 +12,9 @@ interface SchedulingViewProps {
 }
 
 export function SchedulingView({ pumps }: SchedulingViewProps) {
-  const [selectedEvent, setSelectedEvent] = useState<CalendarStageEvent | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<CalendarStageEvent | null>(
+    null
+  );
 
   const handleEventClick = (event: CalendarStageEvent) => {
     setSelectedEvent(event);
@@ -21,14 +22,22 @@ export function SchedulingView({ pumps }: SchedulingViewProps) {
 
   return (
     <DragAndDropContext>
-      <div className="flex flex-col h-[calc(100vh-100px)]" data-testid="scheduling-view">
+      <div
+        className="flex h-[calc(100vh-160px)] flex-col"
+        data-testid="scheduling-view"
+      >
         <CalendarHeader />
-        <div className="flex flex-1 overflow-hidden">
-          <SchedulingSidebar />
-          <MainCalendarGrid pumps={pumps} onEventClick={handleEventClick} />
-          {selectedEvent && (
-            <EventDetailPanel event={selectedEvent} onClose={() => setSelectedEvent(null)} />
-          )}
+        <div className="flex flex-1 gap-4 overflow-hidden">
+          <BacklogDock />
+          <div className="flex flex-1 overflow-hidden">
+            <MainCalendarGrid pumps={pumps} onEventClick={handleEventClick} />
+            {selectedEvent && (
+              <EventDetailPanel
+                event={selectedEvent}
+                onClose={() => setSelectedEvent(null)}
+              />
+            )}
+          </div>
         </div>
       </div>
     </DragAndDropContext>

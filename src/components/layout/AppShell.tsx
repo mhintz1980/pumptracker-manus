@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { Header, type AppView } from "./Header";
-import { Toolbar } from "./Toolbar";
+import { Header } from "./Header";
+import { type AppView } from "./navigation";
 
 interface AppShellProps {
   currentView: AppView;
@@ -16,12 +16,15 @@ export function AppShell({
   children,
 }: AppShellProps) {
   return (
-    <div className="min-h-screen flex flex-col bg-background bg-app-gradient text-foreground">
-      <Header currentView={currentView} onChangeView={onChangeView} />
-      <Toolbar onOpenAddPo={onOpenAddPo} />
-      <main className="flex-1 overflow-auto">
-        {children}
-      </main>
+    <div className="app-ambient text-foreground">
+      <div className="relative z-10 flex min-h-screen flex-col">
+        <Header
+          currentView={currentView}
+          onChangeView={onChangeView}
+          onOpenAddPo={onOpenAddPo}
+        />
+        <main className="flex-1 overflow-auto content-stage">{children}</main>
+      </div>
     </div>
   );
 }

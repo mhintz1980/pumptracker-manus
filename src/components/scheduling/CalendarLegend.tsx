@@ -3,7 +3,7 @@ import * as React from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { Tooltip } from "../ui/Tooltip";
-import { STAGE_COLORS, STAGE_SEQUENCE, STAGE_LABELS } from "../../lib/stage-constants";
+import { STAGE_COLORS, STAGE_LABELS } from "../../lib/stage-constants";
 import type { Stage } from "../../types";
 
 interface CalendarLegendProps {

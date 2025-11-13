@@ -27,6 +27,9 @@ export interface CalendarStageEvent {
   stage: Stage;
   title: string;
   subtitle: string;
+  customer?: string;
+  priority?: Pump["priority"];
+  idleDays?: number;
   week: number;
   startDay: number;
   span: number;
@@ -136,6 +139,12 @@ function buildEventSegments(
   const segments: CalendarStageEvent[] = [];
   const startOffset = differenceInCalendarDays(block.start, viewStart);
   const endOffset = differenceInCalendarDays(block.end, viewStart);
+  const idleDays = pump.last_update
+    ? Math.max(
+        0,
+        differenceInCalendarDays(startOfDay(new Date()), new Date(pump.last_update))
+      )
+    : 0;
 
   if (endOffset <= 0 || startOffset >= totalDays) {
     return segments;
@@ -155,6 +164,9 @@ function buildEventSegments(
       stage: block.stage,
       title: pump.model,
       subtitle: pump.po,
+      customer: pump.customer,
+      priority: pump.priority,
+      idleDays,
       week,
       startDay,
       span: Math.max(1, capacity),

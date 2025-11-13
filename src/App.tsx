@@ -8,7 +8,7 @@ import { SchedulingView } from "./components/scheduling/SchedulingView";
 import { Toaster } from "sonner";
 import { Pump } from "./types";
 import { AppShell } from "./components/layout/AppShell";
-import type { AppView } from "./components/layout/Header";
+import type { AppView } from "./components/layout/navigation";
 // Debug import for development
 import "./debug-seed";
 
@@ -32,7 +32,7 @@ function App() {
         onChangeView={setCurrentView}
         onOpenAddPo={() => setIsAddPoModalOpen(true)}
       >
-        <div className="container mx-auto px-4 py-8">
+        <div className="w-full px-6 py-6">
           {currentView === "dashboard" ? (
             <Dashboard pumps={filteredPumps} onSelectPump={setSelectedPump} />
           ) : currentView === "kanban" ? (
