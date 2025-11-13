@@ -1,13 +1,6 @@
-import { addBusinessDays, differenceInCalendarDays, startOfDay } from "date-fns";
+import { addBusinessDays, differenceInCalendarDays, startOfDay, addDays } from "date-fns";
 import type { Pump, Stage } from "../types";
-
-const STAGE_SEQUENCE: Stage[] = [
-  "FABRICATION",
-  "POWDER COAT",
-  "ASSEMBLY",
-  "TESTING",
-  "SHIPPING",
-];
+import { PRODUCTION_STAGES } from "./stage-constants";
 
 type StageKey = "fabrication" | "powder_coat" | "assembly" | "testing" | "shipping" | "total_days";
 
@@ -49,18 +42,7 @@ export interface BuildCalendarEventsOptions {
   leadTimeLookup: (model: string) => StageDurations | undefined;
 }
 
-const STAGE_ROWS: Record<Stage, number> = {
-  "UNSCHEDULED": 0,
-  "NOT STARTED": 1,
-  FABRICATION: 2,
-  "POWDER COAT": 3,
-  ASSEMBLY: 4,
-  TESTING: 5,
-  SHIPPING: 6,
-  CLOSED: 7,
-};
-
-const STAGE_TO_KEY: Record<Exclude<Stage, "NOT STARTED" | "CLOSED">, StageKey> = {
+const STAGE_TO_KEY: Record<Exclude<Stage, "UNSCHEDULED" | "NOT STARTED" | "CLOSED">, StageKey> = {
   FABRICATION: "fabrication",
   "POWDER COAT": "powder_coat",
   ASSEMBLY: "assembly",
@@ -98,7 +80,7 @@ function deriveShippingDays(raw: StageDurations, roundedSum: number): number {
 }
 
 function sanitizeDurations(raw: StageDurations) {
-  const baseStages = STAGE_SEQUENCE.slice(0, 4) as Array<Exclude<Stage, "NOT STARTED" | "CLOSED">>;
+  const baseStages = PRODUCTION_STAGES.slice(0, 4) as Array<Exclude<Stage, "UNSCHEDULED" | "NOT STARTED" | "CLOSED">>;
   const durations = baseStages.map((stage) => {
     const key = STAGE_TO_KEY[stage];
     return { stage, days: normalizeDays((raw as Record<StageKey, number | undefined>)[key] as number | undefined) };
@@ -176,7 +158,7 @@ function buildEventSegments(
       week,
       startDay,
       span: Math.max(1, capacity),
-      row: STAGE_ROWS[block.stage],
+      row: week,
       startDate: block.start,
       endDate: block.end,
     });
@@ -228,4 +210,59 @@ export function deriveScheduleWindow(
     return null;
   }
   return { timeline, window };
+}
+
+export interface StageSegment {
+  stage: Stage;
+  startDate: Date;
+  endDate: Date;
+  durationDays: number;
+}
+
+export interface WeekSegment {
+  stage: Stage;
+  startDate: Date;
+  endDate: Date;
+  startCol: number;
+  span: number;
+}
+
+export function buildStageSegments(
+  pump: Pump,
+  leadTimes: StageDurations,
+  options?: { startDate?: Date }
+): StageSegment[] {
+  const timeline = buildStageTimeline(pump, leadTimes, options);
+  return timeline.map((block) => ({
+    stage: block.stage,
+    startDate: block.start,
+    endDate: block.end,
+    durationDays: Math.max(1, differenceInCalendarDays(block.end, block.start)),
+  }));
+}
+
+export function projectSegmentsToWeek(blocks: StageBlock[], weekStart: Date, daysInWeek = 7): WeekSegment[] {
+  const weekEnd = addDays(weekStart, daysInWeek);
+  const segments: WeekSegment[] = [];
+
+  for (const block of blocks) {
+    if (block.end <= weekStart || block.start >= weekEnd) {
+      continue;
+    }
+    const clampedStart = block.start < weekStart ? weekStart : block.start;
+    const clampedEnd = block.end > weekEnd ? weekEnd : block.end;
+    const startCol = differenceInCalendarDays(clampedStart, weekStart);
+    const endCol = differenceInCalendarDays(clampedEnd, weekStart);
+    const span = Math.max(1, endCol - startCol);
+
+    segments.push({
+      stage: block.stage,
+      startDate: clampedStart,
+      endDate: clampedEnd,
+      startCol,
+      span,
+    });
+  }
+
+  return segments;
 }

@@ -5,6 +5,8 @@ import { Pump, Filters, AddPoPayload, Stage, DataAdapter } from "./types";
 import { nanoid } from "nanoid";
 import { LocalAdapter } from "./adapters/local";
 import { getModelLeadTimes as getCatalogLeadTimes } from "./lib/seed";
+import { addDays, startOfDay } from "date-fns";
+import type { StageDurations } from "./lib/schedule";
 
 // --- Utils ---
 
@@ -61,6 +63,8 @@ interface AppState {
   updatePump: (id: string, patch: Partial<Pump>) => void;
   schedulePump: (id: string, dropDate: string) => void;
   clearSchedule: (id: string) => void;
+  clearNotStartedSchedules: () => void;
+  levelNotStartedSchedules: () => void;
   replaceDataset: (rows: Pump[]) => void;
   toggleStageCollapse: (stage: Stage) => void;
   toggleCollapsedCards: () => void;
@@ -183,8 +187,7 @@ export const useApp = create<AppState>()(
         const leadTimes = getModelLeadTimes(pump.model);
         if (!leadTimes) return;
 
-        // Calculate start/end dates based on lead times
-        const totalDays = Object.values(leadTimes).reduce((sum, days) => sum + days, 0);
+        const { totalDays } = computeDurationSummary(leadTimes as StageDurations);
         const startDate = new Date(dropDate);
         const endDate = new Date(startDate);
         endDate.setDate(startDate.getDate() + totalDays);
@@ -204,6 +207,141 @@ export const useApp = create<AppState>()(
           scheduledEnd: undefined,
           stage: "UNSCHEDULED",
           last_update: new Date().toISOString(),
+        });
+      },
+      clearNotStartedSchedules: () => {
+        const now = new Date().toISOString();
+        const updates: Pump[] = [];
+        const next = get().pumps.map((pump) => {
+          if (pump.stage !== "NOT STARTED") {
+            return pump;
+          }
+          const updated: Pump = {
+            ...pump,
+            stage: "UNSCHEDULED",
+            scheduledStart: undefined,
+            scheduledEnd: undefined,
+            last_update: now,
+          };
+          updates.push(updated);
+          return updated;
+        });
+        if (!updates.length) return;
+        set({ pumps: next });
+        updates.forEach((pump) => {
+          get().adapter.update(pump.id, {
+            stage: pump.stage,
+            scheduledStart: pump.scheduledStart,
+            scheduledEnd: pump.scheduledEnd,
+            last_update: pump.last_update,
+          });
+        });
+      },
+      levelNotStartedSchedules: () => {
+        const state = get();
+        const limitSetting = state.wipLimits?.FABRICATION;
+        const capacity = typeof limitSetting === "number" && limitSetting > 0 ? limitSetting : Infinity;
+        const notStarted = state.pumps.filter(
+          (pump) => pump.stage === "NOT STARTED" && pump.scheduledStart
+        );
+        if (!notStarted.length) {
+          return;
+        }
+
+        const toISO = (date: Date) => date.toISOString().split("T")[0];
+        const fromISO = (iso: string) => new Date(`${iso}T00:00:00`);
+        const addDaysISO = (iso: string, delta: number) => toISO(addDays(fromISO(iso), delta));
+        const minDateISO = toISO(startOfDay(new Date()));
+
+        const usage = new Map<string, number>();
+        const reserveDays = (startISO: string, days: number) => {
+          for (let i = 0; i < days; i++) {
+            const dayISO = addDaysISO(startISO, i);
+            usage.set(dayISO, (usage.get(dayISO) ?? 0) + 1);
+          }
+        };
+        const canPlace = (startISO: string, days: number) => {
+          if (!Number.isFinite(capacity)) return true;
+          for (let i = 0; i < days; i++) {
+            const dayISO = addDaysISO(startISO, i);
+            if ((usage.get(dayISO) ?? 0) >= capacity) {
+              return false;
+            }
+          }
+          return true;
+        };
+
+        // Seed usage with jobs already in fabrication so we don't overbook
+        state.pumps.forEach((pump) => {
+          if (pump.stage !== "FABRICATION" || !pump.scheduledStart) {
+            return;
+          }
+          const leadTimes = state.getModelLeadTimes(pump.model);
+          if (!leadTimes) return;
+          const { fabricationDays: fabDays } = computeDurationSummary(leadTimes as StageDurations);
+          reserveDays(pump.scheduledStart, fabDays);
+        });
+
+        const sorted = [...notStarted].sort((a, b) => {
+          const aTime = new Date(`${a.scheduledStart}T00:00:00`).getTime();
+          const bTime = new Date(`${b.scheduledStart}T00:00:00`).getTime();
+          return aTime - bTime;
+        });
+
+        const patches: Array<{ id: string; scheduledStart: string; scheduledEnd: string }> = [];
+
+        sorted.forEach((pump) => {
+          const leadTimes = state.getModelLeadTimes(pump.model);
+          if (!leadTimes) return;
+          const { fabricationDays: fabDays, totalDays } = computeDurationSummary(leadTimes as StageDurations);
+
+          let targetStart = pump.scheduledStart!;
+          if (!targetStart || targetStart < minDateISO) {
+            targetStart = minDateISO;
+          }
+
+          while (true) {
+            const candidate = addDaysISO(targetStart, -1);
+            if (candidate < minDateISO) {
+              break;
+            }
+            if (!canPlace(candidate, fabDays)) {
+              break;
+            }
+            targetStart = candidate;
+          }
+
+          reserveDays(targetStart, fabDays);
+          const targetEnd = addDaysISO(targetStart, totalDays);
+          if (targetStart !== pump.scheduledStart || targetEnd !== pump.scheduledEnd) {
+            patches.push({
+              id: pump.id,
+              scheduledStart: targetStart,
+              scheduledEnd: targetEnd,
+            });
+          }
+        });
+
+        if (!patches.length) return;
+
+        const now = new Date().toISOString();
+        const next = state.pumps.map((pump) => {
+          const patch = patches.find((p) => p.id === pump.id);
+          if (!patch) return pump;
+          return {
+            ...pump,
+            scheduledStart: patch.scheduledStart,
+            scheduledEnd: patch.scheduledEnd,
+            last_update: now,
+          };
+        });
+        set({ pumps: next });
+        patches.forEach((patch) => {
+          state.adapter.update(patch.id, {
+            scheduledStart: patch.scheduledStart,
+            scheduledEnd: patch.scheduledEnd,
+            last_update: now,
+          });
         });
       },
 
@@ -227,3 +365,19 @@ export const useApp = create<AppState>()(
     }
   )
 );
+const normalizeDays = (value?: number) => Math.max(1, Math.ceil(value ?? 0));
+
+const computeDurationSummary = (leadTimes: StageDurations) => {
+  const fabrication = normalizeDays(leadTimes.fabrication);
+  const powder = normalizeDays(leadTimes.powder_coat);
+  const assembly = normalizeDays(leadTimes.assembly);
+  const testing = normalizeDays(leadTimes.testing);
+  const baseSum = fabrication + powder + assembly + testing;
+  let shipping = normalizeDays(leadTimes.shipping);
+  if (typeof leadTimes.shipping !== "number" && typeof leadTimes.total_days === "number") {
+    const remainder = Math.max(leadTimes.total_days - baseSum, 0);
+    shipping = normalizeDays(remainder || 1);
+  }
+  const total = baseSum + shipping;
+  return { fabricationDays: fabrication, totalDays: total };
+};

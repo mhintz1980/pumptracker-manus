@@ -5,34 +5,12 @@ import { Button } from "../ui/Button";
 import { Badge } from "../ui/Badge";
 import { cn } from "../../lib/utils";
 import type { CalendarStageEvent } from "../../lib/schedule";
-import type { Stage } from "../../types";
+import { STAGE_LABELS, STAGE_COLORS } from "../../lib/stage-constants";
 
 interface EventDetailPanelProps {
   event: CalendarStageEvent | null;
   onClose: () => void;
 }
-
-const STAGE_LABELS: Record<Stage, string> = {
-  "UNSCHEDULED": "Unscheduled",
-  "NOT STARTED": "Not Started",
-  FABRICATION: "Fabrication",
-  "POWDER COAT": "Powder Coat",
-  ASSEMBLY: "Assembly",
-  TESTING: "Testing",
-  SHIPPING: "Shipping",
-  CLOSED: "Closed",
-};
-
-const stageColors: Record<Stage, string> = {
-  "UNSCHEDULED": "bg-gray-500/40",
-  "NOT STARTED": "bg-slate-500/40",
-  FABRICATION: "bg-blue-500/40",
-  "POWDER COAT": "bg-purple-500/40",
-  ASSEMBLY: "bg-amber-500/40",
-  TESTING: "bg-rose-500/40",
-  SHIPPING: "bg-emerald-500/40",
-  CLOSED: "bg-cyan-500/40",
-};
 
 export function EventDetailPanel({ event, onClose }: EventDetailPanelProps) {
   if (!event) return null;
@@ -72,7 +50,7 @@ export function EventDetailPanel({ event, onClose }: EventDetailPanelProps) {
           <div>
             <div className="text-foreground/60 mb-1 uppercase tracking-[0.2em] text-[11px]">Calendar</div>
             <Badge
-              className={cn(stageColors[event.stage] ?? "bg-slate-500/40", "border-none shadow-soft text-white")}
+              className={cn(STAGE_COLORS[event.stage] ?? "bg-slate-500/40", "border-none shadow-soft text-white")}
               variant="outline"
             >
               Production Schedule
